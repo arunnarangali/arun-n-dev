@@ -1,6 +1,9 @@
+import { useSearchHighlight } from '../features/vscode/state/SearchContext'
+import { highlightText } from '../features/vscode/utils/highlight'
 import { projects } from './content'
 
 export const ProjectsSection = () => {
+  const { query } = useSearchHighlight()
   return (
     <section id="projects" className="mx-auto w-full max-w-6xl space-y-6">
       <header>
@@ -19,8 +22,8 @@ export const ProjectsSection = () => {
             </div>
             <div className="flex flex-1 flex-col gap-4 p-5 text-white">
               <div>
-                <h3 className="text-xl font-semibold">{project.title}</h3>
-                <p className="mt-2 text-sm text-zinc-400">{project.summary}</p>
+                <h3 className="text-xl font-semibold">{highlightText(project.title, query)}</h3>
+                <p className="mt-2 text-sm text-zinc-400">{highlightText(project.summary, query)}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {project.stack.map((tech) => (

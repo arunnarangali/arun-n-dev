@@ -109,13 +109,7 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
     <aside className={wrapperClass}>
       <div className="flex items-center justify-between px-4 py-3 text-on-surface-variant">
         <span className="font-bold">Explorer: portfolio</span>
-        {variant === 'overlay' ? (
-          <button onClick={onClose} className="rounded p-1 text-secondary hover:bg-[#2A2A2A]">
-            <Icon name="close" className="text-[16px]" />
-          </button>
-        ) : (
-          <Icon name="more_horiz" className="text-[14px]" />
-        )}
+        <Icon name="more_horiz" className="text-[14px]" />
       </div>
 
       <div>

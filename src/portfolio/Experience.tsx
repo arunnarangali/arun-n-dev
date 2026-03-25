@@ -1,6 +1,9 @@
+import { useSearchHighlight } from '../features/vscode/state/SearchContext'
+import { highlightText } from '../features/vscode/utils/highlight'
 import { experiences } from './content'
 
 export const ExperienceSection = () => {
+  const { query } = useSearchHighlight()
   return (
     <section className="rounded-2xl border border-zinc-800/80 bg-[#171719] p-8 text-white">
       <header className="mb-6">
@@ -14,13 +17,13 @@ export const ExperienceSection = () => {
             <article key={entry.company} className="relative pl-6">
               <span className="absolute -left-[10px] top-1 h-4 w-4 rounded-full border-2 border-emerald-400 bg-[#171719]" />
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="text-xl font-semibold">{entry.title}</h3>
+                <h3 className="text-xl font-semibold">{highlightText(entry.title, query)}</h3>
                 <p className="text-sm text-zinc-500">{entry.period}</p>
               </div>
-              <p className="text-sm uppercase tracking-[0.3em] text-emerald-400">{entry.company}</p>
+              <p className="text-sm uppercase tracking-[0.3em] text-emerald-400">{highlightText(entry.company, query)}</p>
               <ul className="mt-3 space-y-2 text-sm text-zinc-400">
                 {entry.bullets.map((bullet) => (
-                  <li key={bullet}>• {bullet}</li>
+                  <li key={bullet}>• {highlightText(bullet, query)}</li>
                 ))}
               </ul>
             </article>

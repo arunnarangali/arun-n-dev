@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Highlight, themes } from 'prism-react-renderer'
 import type { PortfolioFile } from '../data/files'
 import { JsonView } from './JsonView'
@@ -6,20 +6,10 @@ import { MarkdownView } from './MarkdownView'
 
 type EditorViewProps = {
   file?: PortfolioFile
+  mode: 'preview' | 'code'
 }
 
-export const EditorView = ({ file }: EditorViewProps) => {
-  const [viewMode, setViewMode] = useState<'preview' | 'code'>('preview')
-
-  useEffect(() => {
-    setViewMode('preview')
-  }, [file?.id])
-
-  const handleToggle = () => {
-    if (!file || file.kind !== 'tsx') return
-    setViewMode((current) => (current === 'preview' ? 'code' : 'preview'))
-  }
-
+export const EditorView = ({ file, mode }: EditorViewProps) => {
   return (
     <div className="flex-1 min-w-0 overflow-auto bg-[#131313] p-6">
       {!file && (
@@ -31,23 +21,7 @@ export const EditorView = ({ file }: EditorViewProps) => {
       {file?.kind === 'markdown' && <MarkdownView source={file.source} />}
       {file?.kind === 'tsx' && file.preview && (
         <div className="space-y-4">
-          <div className="flex justify-end">
-            <button
-              onClick={handleToggle}
-              className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-[#0f0f11] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200 shadow-lg shadow-black/30 transition hover:border-emerald-300"
-            >
-              {viewMode === 'preview' ? (
-                <>
-                  <span className="text-emerald-300">&lt;/&gt;</span> View Code
-                </>
-              ) : (
-                <>
-                  <span>←</span> Preview
-                </>
-              )}
-            </button>
-          </div>
-          {viewMode === 'preview' ? <file.preview /> : <CodeBlock code={file.source} language={file.language} />}
+          {mode === 'preview' ? <file.preview /> : <CodeBlock code={file.source} language={file.language} />}
         </div>
       )}
     </div>

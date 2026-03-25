@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
 import { portfolioFiles } from '../../features/vscode/data/files'
 import { useWorkspace } from '../../features/vscode/state/useWorkspace'
+import { useWorkbench } from '../../features/vscode/state/useWorkbench'
 import { ActivityBar } from '../../features/vscode/components/ActivityBar'
 import { Breadcrumbs } from '../../features/vscode/components/Breadcrumbs'
 import { CommandPalette } from '../../features/vscode/components/CommandPalette'
 import { EditorTabs } from '../../features/vscode/components/EditorTabs'
 import { EditorView } from '../../features/vscode/components/EditorView'
-import { Explorer } from '../../features/vscode/components/Explorer'
+import { LeftPanel } from '../../features/vscode/components/LeftPanel'
 import { MacTitleBar } from '../../features/vscode/components/MacTitleBar'
 import { StatusBar } from '../../features/vscode/components/StatusBar'
 
 export const VSCodePortfolio = () => {
-  const [isExplorerOpen, setExplorerOpen] = useState(true)
+  const workbench = useWorkbench()
+  const [editorMode, setEditorMode] = useState<'preview' | 'code'>('preview')
   const {
     openFiles,
     activeFile,
@@ -23,12 +25,6 @@ export const VSCodePortfolio = () => {
     toggleCommandPalette,
     closeCommandPalette,
   } = useWorkspace()
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      setExplorerOpen(false)
-    }
-  }, [])
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -45,41 +41,70 @@ export const VSCodePortfolio = () => {
     return () => window.removeEventListener('keydown', handler)
   }, [toggleCommandPalette, closeCommandPalette])
 
-  const toggleExplorer = () => setExplorerOpen((prev) => !prev)
-  const closeExplorer = () => setExplorerOpen(false)
+  useEffect(() => {
+    setEditorMode('preview')
+  }, [activeFile?.id])
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface pb-6">
       <MacTitleBar />
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        <ActivityBar explorerActive={isExplorerOpen} onToggleExplorer={toggleExplorer} />
+        <ActivityBar
+          activeView={workbench.activeView}
+          onToggleExplorer={workbench.toggleExplorer}
+          onSelectView={workbench.openView}
+        />
         <div className="hidden md:flex">
-          {isExplorerOpen && (
-            <Explorer files={portfolioFiles} openFiles={openFiles} activeId={activeTabId} onSelect={openFile} />
+          {workbench.isLeftPanelOpen && (
+            <LeftPanel
+              view={workbench.activeView}
+              files={portfolioFiles}
+              openFiles={openFiles}
+              activeId={activeTabId}
+              onSelectFile={openFile}
+            />
           )}
         </div>
         <main className="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden">
           <EditorTabs
             tabs={openFiles}
             activeId={activeTabId}
-            onSelect={setActiveTabId}
+            onSelect={(id) => {
+              setActiveTabId(id)
+              setEditorMode('preview')
+            }}
             onClose={closeFile}
           />
-          <Breadcrumbs path={activeFile?.path} />
-          <EditorView file={activeFile} />
+          <div className="flex items-center justify-between px-4 py-2">
+            <Breadcrumbs path={activeFile?.path} />
+            {activeFile?.kind === 'tsx' && (
+              <button
+                onClick={() => setEditorMode((mode) => (mode === 'preview' ? 'code' : 'preview'))}
+                className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-emerald-400/40 bg-[#0f0f11] text-emerald-200 shadow-lg shadow-black/30 transition hover:border-emerald-300"
+                aria-label={editorMode === 'preview' ? 'View code' : 'View preview'}
+                title={editorMode === 'preview' ? 'View code' : 'View preview'}
+              >
+                <span className="material-symbols-outlined">
+                  {editorMode === 'preview' ? 'code' : 'visibility'}
+                </span>
+              </button>
+            )}
+          </div>
+          <EditorView file={activeFile} mode={editorMode} />
         </main>
       </div>
-      {isExplorerOpen && (
+      {workbench.isLeftPanelOpen && (
         <div className="md:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/60" onClick={closeExplorer} />
+          <div className="absolute inset-0 bg-black/60" onClick={workbench.closePanel} />
           <div className="absolute inset-y-0 right-0 w-full animate-slide-in bg-[#1B1B1C]">
-            <Explorer
+            <LeftPanel
+              view={workbench.activeView}
               files={portfolioFiles}
               openFiles={openFiles}
               activeId={activeTabId}
-              onSelect={openFile}
+              onSelectFile={openFile}
               variant="overlay"
-              onClose={closeExplorer}
+              onClose={workbench.closePanel}
             />
           </div>
         </div>

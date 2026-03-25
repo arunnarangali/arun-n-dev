@@ -44,7 +44,7 @@ export type PortfolioFile = TsxFile | MarkdownFile | JsonFile
 
 export const portfolioFiles: PortfolioFile[] = [
   {
-    id: 'portfolio/Home.tsx',
+    id: 'portfolio/src/pages/Home.tsx',
     name: 'Home.tsx',
     path: ['portfolio', 'src', 'pages', 'Home.tsx'],
     icon: 'code',
@@ -54,7 +54,7 @@ export const portfolioFiles: PortfolioFile[] = [
     source: homeSource,
   },
   {
-    id: 'portfolio/About.tsx',
+    id: 'portfolio/src/pages/About.tsx',
     name: 'About.tsx',
     path: ['portfolio', 'src', 'pages', 'About.tsx'],
     icon: 'code',
@@ -64,7 +64,7 @@ export const portfolioFiles: PortfolioFile[] = [
     source: aboutSource,
   },
   {
-    id: 'portfolio/Projects.tsx',
+    id: 'portfolio/src/pages/Projects.tsx',
     name: 'Projects.tsx',
     path: ['portfolio', 'src', 'pages', 'Projects.tsx'],
     icon: 'code',
@@ -74,7 +74,7 @@ export const portfolioFiles: PortfolioFile[] = [
     source: projectsSource,
   },
   {
-    id: 'portfolio/Experience.tsx',
+    id: 'portfolio/src/pages/Experience.tsx',
     name: 'Experience.tsx',
     path: ['portfolio', 'src', 'pages', 'Experience.tsx'],
     icon: 'code',
@@ -84,7 +84,7 @@ export const portfolioFiles: PortfolioFile[] = [
     source: experienceSource,
   },
   {
-    id: 'portfolio/Skills.tsx',
+    id: 'portfolio/src/pages/Skills.tsx',
     name: 'Skills.tsx',
     path: ['portfolio', 'src', 'pages', 'Skills.tsx'],
     icon: 'code',
@@ -94,7 +94,7 @@ export const portfolioFiles: PortfolioFile[] = [
     source: skillsSource,
   },
   {
-    id: 'portfolio/Contact.tsx',
+    id: 'portfolio/src/pages/Contact.tsx',
     name: 'Contact.tsx',
     path: ['portfolio', 'src', 'pages', 'Contact.tsx'],
     icon: 'code',
@@ -112,7 +112,7 @@ export const portfolioFiles: PortfolioFile[] = [
     source: readmeSource,
   },
   {
-    id: 'portfolio/data/meta.json',
+    id: 'portfolio/src/data/meta.json',
     name: 'meta.json',
     path: ['portfolio', 'src', 'data', 'meta.json'],
     icon: 'data_object',
@@ -120,7 +120,7 @@ export const portfolioFiles: PortfolioFile[] = [
     source: metaSource,
   },
   {
-    id: 'portfolio/data/links.json',
+    id: 'portfolio/src/data/links.json',
     name: 'links.json',
     path: ['portfolio', 'src', 'data', 'links.json'],
     icon: 'data_object',
