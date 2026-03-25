@@ -18,6 +18,98 @@
   }
 }
 
+.theme-light {
+  color-scheme: light;
+}
+
+.theme-light body {
+  @apply bg-[#ffffff] text-[#333333];
+}
+
+.theme-light .bg-surface {
+  background-color: #f3f3f3;
+}
+
+.theme-light .bg-\[\#1B1B1C\] {
+  background-color: #f3f3f3;
+}
+
+.theme-light .bg-\[\#131313\] {
+  background-color: #ffffff;
+}
+
+.theme-light .text-on-surface {
+  color: #333333;
+}
+
+.theme-light .text-secondary\/70 {
+  color: #0066aa;
+}
+
+.theme-light .text-secondary\/60 {
+  color: #007acc;
+}
+
+.theme-light .text-secondary\/80 {
+  color: #004488;
+}
+
+.theme-light .bg-\[\#2A2A2A\] {
+  background-color: #e8e8e8;
+}
+
+.theme-light .border-\[\#2a2a2a\] {
+  border-color: #d4d4d4;
+}
+
+.theme-light .bg-\[\#007ACC\] {
+  background-color: #0078d4;
+}
+
+.theme-highContrast {
+  color-scheme: dark;
+}
+
+.theme-highContrast body {
+  @apply bg-[#000000] text-[#ffffff];
+}
+
+.theme-highContrast .bg-surface {
+  background-color: #000000;
+}
+
+.theme-highContrast .bg-\[\#1B1B1C\] {
+  background-color: #000000;
+}
+
+.theme-highContrast .bg-\[\#131313\] {
+  background-color: #0a0a0a;
+}
+
+.theme-highContrast .text-on-surface {
+  color: #ffffff;
+}
+
+.theme-highContrast .text-secondary\/70 {
+  color: #00ff00;
+}
+
+.theme-highContrast .text-secondary\/60 {
+  color: #00ff00;
+}
+
+.theme-highContrast .bg-\[\#2A2A2A\] {
+  background-color: #1a1a1a;
+}
+
+.theme-highContrast .border-\[\#2a2a2a\] {
+  border-color: #ffffff;
+}
+
+.theme-highContrast .bg-\[\#007ACC\] {
+  background-color: #007acc;
+}
+
 #root {
   display: flex;
   flex: 1;

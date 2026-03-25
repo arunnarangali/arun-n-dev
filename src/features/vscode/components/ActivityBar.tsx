@@ -8,15 +8,21 @@ const primaryActions: Array<{ icon: string; view: WorkbenchView }> = [
   { icon: 'extension', view: 'extensions' },
 ]
 
-const utilityIcons = ['account_circle', 'settings']
-
 type ActivityBarProps = {
   activeView: WorkbenchView
   onToggleExplorer: () => void
   onSelectView: (view: WorkbenchView) => void
+  onOpenProfile: () => void
+  onOpenSettings: () => void
 }
 
-export const ActivityBar = ({ activeView, onToggleExplorer, onSelectView }: ActivityBarProps) => {
+export const ActivityBar = ({
+  activeView,
+  onToggleExplorer,
+  onSelectView,
+  onOpenProfile,
+  onOpenSettings,
+}: ActivityBarProps) => {
   return (
     <aside className="flex w-12 flex-col items-center gap-4 border-r border-[#1B1B1C] bg-[#131313] py-4">
       {primaryActions.map(({ icon, view }) => {
@@ -38,14 +44,18 @@ export const ActivityBar = ({ activeView, onToggleExplorer, onSelectView }: Acti
         )
       })}
       <div className="mt-auto flex flex-col items-center gap-4">
-        {utilityIcons.map((icon) => (
-          <button
-            key={icon}
-            className="p-2 text-secondary/60 transition-all duration-150 ease-in-out hover:bg-[#2A2A2A] hover:text-on-surface"
-          >
-            <Icon name={icon} />
-          </button>
-        ))}
+        <button
+          onClick={onOpenProfile}
+          className="p-2 text-secondary/60 transition-all duration-150 ease-in-out hover:bg-[#2A2A2A] hover:text-on-surface"
+        >
+          <Icon name="account_circle" />
+        </button>
+        <button
+          onClick={onOpenSettings}
+          className="p-2 text-secondary/60 transition-all duration-150 ease-in-out hover:bg-[#2A2A2A] hover:text-on-surface"
+        >
+          <Icon name="settings" />
+        </button>
       </div>
     </aside>
   )

@@ -135,12 +135,6 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
       </div>
 
       <div className="mt-2 flex flex-col">{renderNodes(tree.children)}</div>
-
-      <div className="mt-auto p-4">
-        <button className="w-full rounded bg-[#007ACC] py-2 text-[10px] font-bold tracking-widest text-white transition-colors hover:bg-[#005A9E]">
-          GET IN TOUCH
-        </button>
-      </div>
     </aside>
   )
 }

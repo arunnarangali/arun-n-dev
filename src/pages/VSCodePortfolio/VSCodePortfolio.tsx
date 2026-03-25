@@ -2,18 +2,25 @@ import { useEffect, useState } from 'react'
 import { portfolioFiles } from '../../features/vscode/data/files'
 import { useWorkspace } from '../../features/vscode/state/useWorkspace'
 import { useWorkbench } from '../../features/vscode/state/useWorkbench'
+import { useSettings } from '../../features/vscode/state/useSettings'
 import { ActivityBar } from '../../features/vscode/components/ActivityBar'
 import { Breadcrumbs } from '../../features/vscode/components/Breadcrumbs'
 import { CommandPalette } from '../../features/vscode/components/CommandPalette'
 import { EditorTabs } from '../../features/vscode/components/EditorTabs'
 import { EditorView } from '../../features/vscode/components/EditorView'
+import { FloatingContact } from '../../features/vscode/components/FloatingContact'
 import { LeftPanel } from '../../features/vscode/components/LeftPanel'
 import { MacTitleBar } from '../../features/vscode/components/MacTitleBar'
+import { ProfileModal } from '../../features/vscode/components/ProfileModal'
+import { SettingsModal } from '../../features/vscode/components/SettingsModal'
 import { StatusBar } from '../../features/vscode/components/StatusBar'
 
 export const VSCodePortfolio = () => {
   const workbench = useWorkbench()
+  const settings = useSettings()
   const [editorMode, setEditorMode] = useState<'preview' | 'code'>('preview')
+  const [isProfileOpen, setProfileOpen] = useState(false)
+  const [isSettingsOpen, setSettingsOpen] = useState(false)
   const {
     openFiles,
     activeFile,
@@ -46,13 +53,15 @@ export const VSCodePortfolio = () => {
   }, [activeFile?.id])
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-surface pb-6">
+    <div className={`flex h-full min-h-0 flex-col bg-surface pb-6 theme-${settings.theme}`}>
       <MacTitleBar />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <ActivityBar
           activeView={workbench.activeView}
           onToggleExplorer={workbench.toggleExplorer}
           onSelectView={workbench.openView}
+          onOpenProfile={() => setProfileOpen(true)}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
         <div className="hidden md:flex">
           {workbench.isLeftPanelOpen && (
@@ -111,6 +120,9 @@ export const VSCodePortfolio = () => {
       )}
       <StatusBar />
       <CommandPalette open={isCommandPaletteOpen} onClose={closeCommandPalette} />
+      <ProfileModal isOpen={isProfileOpen} onClose={() => setProfileOpen(false)} />
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
+      <FloatingContact />
     </div>
   )
 }
