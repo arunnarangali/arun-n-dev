@@ -50,6 +50,29 @@
   color: #e5e2e1;
 }
 
+.markdown-preview h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.markdown-preview h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.markdown-preview ul {
+  margin-left: 1rem;
+  list-style: disc;
+}
+
+.markdown-preview blockquote {
+  border-left: 3px solid #9fcaff;
+  margin: 0;
+  padding-left: 1rem;
+  color: #c0c7d3;
+  font-style: italic;
+}
+
 .editor-caret {
   width: 2px;
   background: #f0f0f0;
@@ -65,4 +88,17 @@
   100% {
     opacity: 0;
   }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.2s ease-out both;
 }

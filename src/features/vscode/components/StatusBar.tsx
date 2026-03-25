@@ -14,7 +14,6 @@ export const StatusBar = () => {
       <div className="flex items-center gap-3">
         <span className="px-2">UTF-8</span>
         <span className="px-2">LF</span>
-        <span className="px-2">JSON</span>
         <span className="px-2">React</span>
         <span className="px-2">TypeScript</span>
         <span className="px-2">Node</span>

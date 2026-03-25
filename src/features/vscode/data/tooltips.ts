@@ -19,6 +19,14 @@ export const propertyHints: Record<string, string> = {
   discord: 'Community handle. Type: string',
   website: 'Public portfolio link. Type: string (URL)',
   booking: 'Scheduling link. Type: string (URL)',
+  meta: 'SEO + OpenGraph payload. Type: object',
+  ogImage: 'Absolute path to cover image. Type: string (URL)',
+  keywords: 'SEO keyword array. Type: string[]',
+  github: 'GitHub profile URL. Type: string (URL)',
+  linkedin: 'LinkedIn profile URL. Type: string (URL)',
+  twitter: 'Twitter/X handle URL. Type: string (URL)',
+  resume: 'Resume link. Type: string (URL)',
+  newsletter: 'Newsletter link. Type: string (URL)',
 }
 
 export const getHintForProperty = (key: string) =>

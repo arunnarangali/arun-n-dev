@@ -3,7 +3,7 @@ import { getHintForProperty } from '../data/tooltips'
 import { Icon } from './Icon'
 
 type JsonViewProps = {
-  content: Record<string, unknown>
+  source: string
 }
 
 const classifyValue = (value: string) => {
@@ -41,95 +41,50 @@ const renderValue = (value: string) => {
   )
 }
 
-const renderLine = (line: string, index: number) => {
+const renderLine = (line: string) => {
   const keyMatch = line.match(/^(\s*)"([^"']+)"(:\s*)(.*)$/)
-  return (
-    <div key={`${line}-${index}`} className="editor-line whitespace-pre text-[13px] leading-relaxed">
-      {keyMatch ? (
-        <>
-          {keyMatch[1]}
-          <JsonKey name={keyMatch[2]} />
-          <span className="syntax-punct">{keyMatch[3]}</span>
-          {renderValue(keyMatch[4])}
-        </>
-      ) : (
-        <span className={classifyValue(line)}>{line}</span>
-      )}
-    </div>
-  )
+  if (keyMatch) {
+    return (
+      <span className="editor-line whitespace-pre text-[13px] leading-relaxed">
+        {keyMatch[1]}
+        <JsonKey name={keyMatch[2]} />
+        <span className="syntax-punct">{keyMatch[3]}</span>
+        {renderValue(keyMatch[4])}
+      </span>
+    )
+  }
+  return <span className={`editor-line whitespace-pre text-[13px] leading-relaxed ${classifyValue(line)}`}>{line}</span>
 }
 
-type CodeRow = { type: 'code'; text: string; lineNumber: number }
-type PreviewRow = { type: 'preview'; src: string; indent: number }
-type CaretRow = { type: 'caret' }
-type Row = CodeRow | PreviewRow | CaretRow
-
-const createRows = (formatted: string): Row[] => {
-  const lines = formatted.split('\n')
-  const rows: Row[] = []
-  let lineNumber = 1
-
-  lines.forEach((line) => {
-    rows.push({ type: 'code', text: line, lineNumber })
-    lineNumber += 1
-
-    const imageMatch = line.match(/^(\s*)"image"\s*:\s*"([^"]+)"/)
-    if (imageMatch) {
-      rows.push({ type: 'preview', src: imageMatch[2], indent: imageMatch[1]?.length ?? 0 })
+export const JsonView = ({ source }: JsonViewProps) => {
+  const formatted = useMemo(() => {
+    try {
+      const parsed = JSON.parse(source)
+      return JSON.stringify(parsed, null, 2)
+    } catch (error) {
+      return source
     }
-  })
+  }, [source])
 
-  rows.push({ type: 'caret' })
-  return rows
-}
-
-export const JsonView = ({ content }: JsonViewProps) => {
-  const formatted = useMemo(() => JSON.stringify(content, null, 2), [content])
-  const rows = useMemo(() => createRows(formatted), [formatted])
+  const lines = useMemo(() => formatted.split('\n'), [formatted])
 
   return (
     <div className="flex">
       <div className="select-none pr-4 text-right font-mono text-[11px] text-on-surface-variant/40">
-        {rows.map((row, index) => (
-          <div key={`gutter-${index}`}>{row.type === 'code' ? row.lineNumber : ' '}</div>
+        {lines.map((_, index) => (
+          <div key={`gutter-${index}`}>{index + 1}</div>
         ))}
+        <div>&nbsp;</div>
       </div>
-      <div className="flex-1 space-y-2 font-mono text-on-surface">
-        {rows.map((row, index) => {
-          if (row.type === 'code') {
-            return <div key={`line-${index}`} className="whitespace-pre text-[13px] leading-relaxed">{renderLine(row.text, index)}</div>
-          }
-          if (row.type === 'preview') {
-            return (
-              <div
-                key={`preview-${index}`}
-                className="overflow-hidden rounded border border-outline-variant bg-surface-container-low"
-                style={{ marginLeft: `${row.indent}ch` }}
-              >
-                <div className="flex items-center gap-2 bg-surface-container-high px-3 py-1 text-[10px] text-on-surface-variant/60">
-                  <div className="flex gap-1">
-                    <span className="h-2 w-2 rounded-full bg-on-surface-variant/30" />
-                    <span className="h-2 w-2 rounded-full bg-on-surface-variant/30" />
-                    <span className="h-2 w-2 rounded-full bg-on-surface-variant/30" />
-                  </div>
-                  <span>preview: {row.src.split('/').pop()}</span>
-                </div>
-                <div className="bg-[#050505]">
-                  <img
-                    src={row.src}
-                    alt={row.src}
-                    className="h-64 w-full object-cover grayscale transition duration-700 hover:grayscale-0"
-                  />
-                </div>
-              </div>
-            )
-          }
-          return (
-            <div key={`caret-${index}`} className="editor-line whitespace-pre">
-              <span className="editor-caret inline-block h-4 align-middle" />
-            </div>
-          )
-        })}
+      <div className="flex-1 font-mono text-on-surface">
+        {lines.map((line, index) => (
+          <div key={`line-${index}`} className="whitespace-pre text-[13px] leading-relaxed">
+            {renderLine(line)}
+          </div>
+        ))}
+        <div className="editor-line whitespace-pre">
+          <span className="editor-caret inline-block h-4 align-middle" />
+        </div>
       </div>
     </div>
   )
