@@ -58,7 +58,7 @@ export const VSCodePortfolio = () => {
             <Explorer files={portfolioFiles} openFiles={openFiles} activeId={activeTabId} onSelect={openFile} />
           )}
         </div>
-        <main className="flex flex-1 min-h-0 flex-col overflow-hidden">
+        <main className="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden">
           <EditorTabs
             tabs={openFiles}
             activeId={activeTabId}

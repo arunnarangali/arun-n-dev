@@ -21,7 +21,7 @@ export const EditorView = ({ file }: EditorViewProps) => {
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-[#131313] p-6">
+    <div className="flex-1 min-w-0 overflow-auto bg-[#131313] p-6">
       {!file && (
         <div className="flex h-full items-center justify-center font-mono text-on-surface-variant">
           Select a file from the explorer to begin.

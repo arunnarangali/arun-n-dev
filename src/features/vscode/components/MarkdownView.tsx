@@ -16,7 +16,12 @@ export const MarkdownView = ({ source }: MarkdownViewProps) => {
         <header className="border-b border-outline-variant/40 px-4 py-2 text-[11px] uppercase tracking-widest text-on-surface-variant">
           Markdown Source
         </header>
-        <pre className="max-h-[24rem] overflow-auto px-4 py-4 font-mono text-[13px] text-on-surface-variant">{source.trim()}</pre>
+        <pre
+          className="max-h-[24rem] overflow-auto whitespace-pre-wrap break-words px-4 py-4 font-mono text-[13px] text-on-surface-variant"
+          style={{ overflowWrap: 'anywhere' }}
+        >
+          {source.trim()}
+        </pre>
       </div>
       <div className="rounded border border-outline-variant bg-[#1E1E1E]">
         <header className="border-b border-outline-variant/40 px-4 py-2 text-[11px] uppercase tracking-widest text-on-surface-variant">

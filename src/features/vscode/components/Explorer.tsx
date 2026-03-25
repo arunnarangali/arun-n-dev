@@ -123,19 +123,21 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
           <Icon name="expand_more" className="mr-1 text-[14px]" />
           <span className="font-bold">Open Editors</span>
         </div>
-        {openFiles.map((file) => (
-          <button
-            key={file.id}
-            onClick={() => {
-              onSelect(file.id)
-              onClose?.()
-            }}
-            className="flex w-full items-center gap-2 px-6 py-1 text-left text-[#E5E2E1] hover:bg-[#2A2A2A]"
-          >
-            <Icon name={file.icon} className="text-[14px] text-primary" />
-            <span className="lowercase">{formatLabel(file)}</span>
-          </button>
-        ))}
+        <div className="vscode-scrollbar max-h-[78px] overflow-x-hidden overflow-y-auto pr-2">
+          {openFiles.map((file) => (
+            <button
+              key={file.id}
+              onClick={() => {
+                onSelect(file.id)
+                if (variant === 'overlay') onClose?.()
+              }}
+              className="flex h-6 w-full items-center gap-2 px-6 text-left text-[#E5E2E1] hover:bg-[#2A2A2A]"
+            >
+              <Icon name={file.icon} className="text-[14px] text-primary" />
+              <span className="lowercase">{formatLabel(file)}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="mt-2 flex flex-col">{renderNodes(tree.children)}</div>
