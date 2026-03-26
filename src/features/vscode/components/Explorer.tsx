@@ -52,13 +52,13 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
   const wrapperClass =
     variant === 'overlay'
       ? 'flex h-full w-full flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider'
-      : 'flex w-60 flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider'
+      : 'flex w-full flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider'
 
   const tree = useMemo(() => buildTree(files), [files])
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
     'portfolio/src': true,
     'portfolio/src/pages': true,
-    'portfolio/src/data': true,
+    'portfolio/src/data': false,
   })
 
   const toggleFolder = (pathKey: string) => {

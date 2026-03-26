@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { portfolioFiles } from '../../features/vscode/data/files'
 import { useWorkspace } from '../../features/vscode/state/useWorkspace'
 import { useWorkbench } from '../../features/vscode/state/useWorkbench'
@@ -14,6 +14,11 @@ import { MacTitleBar } from '../../features/vscode/components/MacTitleBar'
 import { ProfileModal } from '../../features/vscode/components/ProfileModal'
 import { SettingsModal } from '../../features/vscode/components/SettingsModal'
 import { StatusBar } from '../../features/vscode/components/StatusBar'
+import { TerminalPanel } from '../../features/vscode/components/panels/TerminalPanel'
+import links from '../../portfolio/data/links.json'
+import { useResizablePanel } from '../../features/vscode/hooks/useResizablePanel'
+
+const SIDEBAR_DEFAULT_WIDTH = 240
 
 export const VSCodePortfolio = () => {
   const workbench = useWorkbench()
@@ -21,6 +26,8 @@ export const VSCodePortfolio = () => {
   const [editorMode, setEditorMode] = useState<'preview' | 'code'>('preview')
   const [isProfileOpen, setProfileOpen] = useState(false)
   const [isSettingsOpen, setSettingsOpen] = useState(false)
+  const [isTerminalOpen, setTerminalOpen] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(() => (typeof window === 'undefined' ? true : window.innerWidth >= 768))
   const {
     openFiles,
     activeFile,
@@ -32,6 +39,19 @@ export const VSCodePortfolio = () => {
     toggleCommandPalette,
     closeCommandPalette,
   } = useWorkspace()
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mediaQuery = window.matchMedia('(min-width: 768px)')
+    const update = (event?: MediaQueryListEvent) => setIsDesktop(event ? event.matches : mediaQuery.matches)
+    update()
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', update)
+      return () => mediaQuery.removeEventListener('change', update)
+    }
+    mediaQuery.addListener(update)
+    return () => mediaQuery.removeListener(update)
+  }, [])
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -52,9 +72,33 @@ export const VSCodePortfolio = () => {
     setEditorMode('preview')
   }, [activeFile?.id])
 
+  const canTogglePreview = useMemo(() => activeFile?.kind === 'tsx', [activeFile?.kind])
+
+  const handleToggleEditorMode = useCallback(() => {
+    if (!canTogglePreview) return
+    setEditorMode((mode) => (mode === 'preview' ? 'code' : 'preview'))
+  }, [canTogglePreview])
+
+  const sidebarResize = useResizablePanel({
+    axis: 'x',
+    storageKey: 'vscode-sidebar-width',
+    defaultSize: SIDEBAR_DEFAULT_WIDTH,
+    min: 200,
+    getMax: ({ width }) => Math.min(520, width * 0.5),
+    enabled: workbench.isLeftPanelOpen && isDesktop,
+  })
+
+  const sidebarHandleProps = sidebarResize.getHandleProps()
+
   return (
     <div className={`flex h-full min-h-0 flex-col bg-surface pb-6 theme-${settings.theme} layout-${settings.layout}`}>
-      <MacTitleBar />
+      <MacTitleBar
+        isTerminalOpen={isTerminalOpen}
+        onToggleTerminal={() => setTerminalOpen((current) => !current)}
+        editorMode={editorMode}
+        onToggleEditorMode={handleToggleEditorMode}
+        canTogglePreview={canTogglePreview}
+      />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <ActivityBar
           activeView={workbench.activeView}
@@ -65,13 +109,28 @@ export const VSCodePortfolio = () => {
         />
         <div className="hidden md:flex">
           {workbench.isLeftPanelOpen && (
-            <LeftPanel
-              view={workbench.activeView}
-              files={portfolioFiles}
-              openFiles={openFiles}
-              activeId={activeTabId}
-              onSelectFile={openFile}
-            />
+            <div
+              className="group/sidebar relative flex h-full"
+              style={{ width: `${sidebarResize.size}px` }}
+            >
+              <LeftPanel
+                view={workbench.activeView}
+                files={portfolioFiles}
+                openFiles={openFiles}
+                activeId={activeTabId}
+                onSelectFile={openFile}
+              />
+              <div
+                className={`absolute right-0 top-0 hidden h-full w-[6px] cursor-col-resize rounded-sm transition-opacity md:block ${
+                  sidebarResize.isResizing ? 'opacity-100 bg-primary/40' : 'opacity-0 group-hover/sidebar:opacity-100 hover:bg-primary/30'
+                }`}
+                {...sidebarHandleProps}
+                onDoubleClick={(event) => {
+                  event.preventDefault()
+                  sidebarResize.setSize(SIDEBAR_DEFAULT_WIDTH)
+                }}
+              />
+            </div>
           )}
         </div>
         <main className="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden">
@@ -86,9 +145,9 @@ export const VSCodePortfolio = () => {
           />
           <div className="flex items-center justify-between px-4 py-2">
             <Breadcrumbs path={activeFile?.path} />
-            {activeFile?.kind === 'tsx' && (
+            {canTogglePreview && (
               <button
-                onClick={() => setEditorMode((mode) => (mode === 'preview' ? 'code' : 'preview'))}
+                onClick={handleToggleEditorMode}
                 className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-emerald-400/40 bg-surface-container-lowest text-emerald-500 shadow-lg shadow-black/30 transition hover:border-emerald-300"
                 aria-label={editorMode === 'preview' ? 'View code' : 'View preview'}
                 title={editorMode === 'preview' ? 'View code' : 'View preview'}
@@ -99,7 +158,20 @@ export const VSCodePortfolio = () => {
               </button>
             )}
           </div>
-          <EditorView file={activeFile} mode={editorMode} />
+          <div className="flex flex-1 min-h-0 flex-col">
+            <EditorView file={activeFile} mode={editorMode} />
+            <TerminalPanel
+              open={isTerminalOpen}
+              onClose={() => setTerminalOpen(false)}
+              files={portfolioFiles}
+              onOpenFile={openFile}
+              theme={settings.theme}
+              layout={settings.layout}
+              setTheme={settings.setTheme}
+              setLayout={settings.setLayout}
+              links={links as Record<string, string | undefined>}
+            />
+          </div>
         </main>
       </div>
       {workbench.isLeftPanelOpen && (

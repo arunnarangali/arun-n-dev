@@ -19,7 +19,7 @@ export const SearchPanel = ({ onSelect, variant = 'sidebar', onClose }: SearchPa
   return (
     <aside
       className={`flex flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider ${
-        variant === 'overlay' ? 'h-full w-full' : 'w-72'
+        variant === 'overlay' ? 'h-full w-full' : 'w-full'
       }`}
     >
       <div className="px-4 py-3">

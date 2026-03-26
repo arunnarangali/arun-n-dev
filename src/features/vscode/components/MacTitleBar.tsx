@@ -1,8 +1,167 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from './Icon'
+import linksJson from '../../../portfolio/data/links.json'
+import meta from '../../../portfolio/data/meta.json'
 
-export const MacTitleBar = () => {
+type MacTitleBarProps = {
+  isTerminalOpen: boolean
+  onToggleTerminal: () => void
+  canTogglePreview: boolean
+  editorMode: 'preview' | 'code'
+  onToggleEditorMode: () => void
+}
+
+type MenuItem = {
+  id: string
+  label: string
+  icon?: string
+  action: () => void
+  disabled?: boolean
+  subtle?: boolean
+}
+
+const links = linksJson as Record<string, string | undefined>
+
+const portfolioUrlFallback = links.website ?? links.github ?? 'https://arun-react.dev'
+
+export const MacTitleBar = ({
+  isTerminalOpen,
+  onToggleTerminal,
+  canTogglePreview,
+  editorMode,
+  onToggleEditorMode,
+}: MacTitleBarProps) => {
+  const [isMenuOpen, setMenuOpen] = useState(false)
+  const [feedback, setFeedback] = useState('')
+  const menuRef = useRef<HTMLDivElement>(null)
+  const portfolioUrl = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.href
+    }
+    return portfolioUrlFallback
+  }, [])
+
+  useEffect(() => {
+    if (!isMenuOpen) return
+    const handleClick = (event: MouseEvent) => {
+      if (!menuRef.current) return
+      if (menuRef.current.contains(event.target as Node)) return
+      setMenuOpen(false)
+    }
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [isMenuOpen])
+
+  useEffect(() => {
+    if (!feedback) return
+    const timeout = window.setTimeout(() => setFeedback(''), 1800)
+    return () => window.clearTimeout(timeout)
+  }, [feedback])
+
+  const copyToClipboard = async (value: string) => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value)
+      } else {
+        const textArea = document.createElement('textarea')
+        textArea.value = value
+        textArea.style.position = 'fixed'
+        textArea.style.opacity = '0'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+      }
+      setFeedback('Link copied!')
+    } catch (error) {
+      console.error('Clipboard unavailable', error)
+      setFeedback('Clipboard unavailable')
+    }
+  }
+
+  const openExternal = (url?: string) => {
+    if (!url) return
+    window.open(url, '_blank', 'noopener')
+    setMenuOpen(false)
+  }
+
+  const handleDownloadResume = () => {
+    openExternal('/resume.pdf')
+  }
+
+  const handleShare = async () => {
+    const payload = {
+      title: meta.title,
+      text: meta.description,
+      url: portfolioUrl,
+    }
+    if (navigator?.share) {
+      try {
+        await navigator.share(payload)
+        setMenuOpen(false)
+        return
+      } catch (error) {
+        console.warn('Share cancelled', error)
+      }
+    }
+    await copyToClipboard(portfolioUrl)
+  }
+
+  const handleCopyUrl = async () => {
+    await copyToClipboard(portfolioUrl)
+  }
+
+  const menuItems: MenuItem[] = [
+    {
+      id: 'copy-url',
+      label: 'Copy Portfolio URL',
+      icon: 'content_copy',
+      action: handleCopyUrl,
+    },
+    {
+      id: 'linkedin',
+      label: 'Open LinkedIn Profile',
+      icon: 'work',
+      action: () => openExternal(links.linkedin),
+    },
+    {
+      id: 'repo',
+      label: 'Open GitHub Repository',
+      icon: 'integration_instructions',
+      action: () => openExternal(links.repo ?? links.github),
+    },
+    {
+      id: 'github-profile',
+      label: 'Open GitHub Profile',
+      icon: 'terminal',
+      action: () => openExternal(links.github),
+    },
+    {
+      id: 'resume',
+      label: 'Download Resume (PDF)',
+      action: handleDownloadResume,
+      subtle: true,
+    },
+    {
+      id: 'share',
+      label: 'Share Portfolio',
+      icon: 'share',
+      action: handleShare,
+    },
+  ]
+
   return (
-    <header className="flex h-9 w-full items-center justify-between border-b border-outline-variant bg-surface-container-low px-3 text-sm font-medium text-on-surface">
+    <header className="relative flex h-9 w-full items-center justify-between border-b border-outline-variant bg-surface-container-low px-3 text-sm font-medium text-on-surface">
       <div className="flex items-center gap-2">
         <div className="flex gap-2 pr-4">
           <span className="h-3 w-3 rounded-full bg-[#FF5F56]" />
@@ -12,9 +171,55 @@ export const MacTitleBar = () => {
         <span className="font-headline text-xs tracking-tight text-on-surface/80">portfolio — Visual Studio Code</span>
       </div>
       <div className="flex items-center gap-3 text-primary/80">
-        <button className="rounded p-1 transition-colors hover:bg-surface-container-high"><Icon name="splitscreen" /></button>
-        <button className="rounded p-1 transition-colors hover:bg-surface-container-high"><Icon name="dock_to_right" /></button>
-        <button className="rounded p-1 transition-colors hover:bg-surface-container-high"><Icon name="more_vert" /></button>
+        <button
+          onClick={onToggleTerminal}
+          className={`rounded p-1 transition-colors hover:bg-surface-container-high ${isTerminalOpen ? 'text-on-surface' : ''}`}
+          aria-pressed={isTerminalOpen}
+          title={isTerminalOpen ? 'Hide terminal' : 'Show terminal'}
+        >
+          <Icon name="splitscreen" />
+        </button>
+        <button
+          onClick={onToggleEditorMode}
+          disabled={!canTogglePreview}
+          className={`rounded p-1 transition-colors hover:bg-surface-container-high ${canTogglePreview ? 'text-primary/80' : 'text-secondary/40'} ${editorMode === 'code' ? 'text-on-surface' : ''
+            }`}
+          title={canTogglePreview ? (editorMode === 'preview' ? 'View component code' : 'View live preview') : 'Code preview unavailable'}
+        >
+          <Icon name={editorMode === 'preview' ? 'dock_to_right' : 'code'} />
+        </button>
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen((open) => !open)}
+            className={`rounded p-1 transition-colors hover:bg-surface-container-high ${isMenuOpen ? 'text-on-surface' : ''}`}
+            aria-expanded={isMenuOpen}
+            aria-haspopup="menu"
+            title="More actions"
+          >
+            <Icon name="more_vert" />
+          </button>
+          {isMenuOpen && (
+            <div className="absolute right-0 z-50 mt-2 w-64 rounded-lg border border-outline-variant bg-surface-container-high text-left shadow-2xl">
+              <ul className="py-1 text-[13px] text-on-surface">
+                {menuItems.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      onClick={() => {
+                        item.action()
+                      }}
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-surface-container-lowest ${item.subtle ? 'font-normal tracking-normal text-on-surface/70' : ''
+                        }`}
+                    >
+                      {item.icon && !item.subtle && <Icon name={item.icon} className="text-sm text-secondary" />}
+                      <span>{item.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {feedback && <div className="border-t border-outline-variant px-3 py-2 text-[11px] text-secondary">{feedback}</div>}
+            </div>
+          )}
+        </div>
       </div>
     </header>
   )
