@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { PortfolioFile } from '../data/files'
 import { Icon } from './Icon'
+import { useSettings } from '../state/useSettings'
 
 type ExplorerProps = {
   files: PortfolioFile[]
@@ -45,10 +46,13 @@ const buildTree = (files: PortfolioFile[]): TreeNode => {
 }
 
 export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'sidebar', onClose }: ExplorerProps) => {
+  const { layout } = useSettings()
+  const isCompact = layout === 'compact'
+
   const wrapperClass =
     variant === 'overlay'
-      ? 'flex h-full w-full flex-col bg-[#1B1B1C] font-mono text-[11px] uppercase tracking-wider'
-      : 'flex w-60 flex-col bg-[#1B1B1C] font-mono text-[11px] uppercase tracking-wider'
+      ? 'flex h-full w-full flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider'
+      : 'flex w-60 flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider'
 
   const tree = useMemo(() => buildTree(files), [files])
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
@@ -77,8 +81,9 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
               if (variant === 'overlay') onClose?.()
             }}
             className={[
-              'flex items-center justify-between py-1 text-left transition-colors',
-              isActive ? 'border-l-2 border-primary bg-[#2A2A2A] text-on-surface' : 'text-secondary/70 hover:bg-[#2A2A2A] hover:text-on-surface',
+              'flex items-center justify-between text-left transition-colors',
+              isCompact ? 'py-0.5' : 'py-1',
+              isActive ? 'border-l-2 border-primary bg-surface-container-high text-on-surface' : 'text-secondary/70 hover:bg-surface-container-high hover:text-on-surface',
             ].join(' ')}
             style={{ paddingLeft: `${depth * 16 + 24}px` }}
           >
@@ -106,14 +111,14 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
     })
 
   return (
-    <aside className={wrapperClass}>
+    <aside className={[wrapperClass, isCompact ? 'text-[10px]' : 'text-[11px]'].join(' ')}>
       <div className="flex items-center justify-between px-4 py-3 text-on-surface-variant">
         <span className="font-bold">Explorer: portfolio</span>
         <Icon name="more_horiz" className="text-[14px]" />
       </div>
 
       <div>
-        <div className="flex items-center bg-[#2A2A2A] px-2 py-1 text-on-surface">
+        <div className="flex items-center bg-surface-container-high px-2 py-1 text-on-surface">
           <Icon name="expand_more" className="mr-1 text-[14px]" />
           <span className="font-bold">Open Editors</span>
         </div>
@@ -125,7 +130,10 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
                 onSelect(file.id)
                 if (variant === 'overlay') onClose?.()
               }}
-              className="flex h-6 w-full items-center gap-2 px-6 text-left text-[#E5E2E1] hover:bg-[#2A2A2A]"
+              className={[
+                'flex w-full items-center gap-2 px-6 text-left text-on-surface hover:bg-surface-container-high',
+                isCompact ? 'h-5' : 'h-6',
+              ].join(' ')}
             >
               <Icon name={file.icon} className="text-[14px] text-primary" />
               <span className="lowercase">{formatLabel(file)}</span>

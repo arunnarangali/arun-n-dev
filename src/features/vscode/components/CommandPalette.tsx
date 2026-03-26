@@ -35,7 +35,7 @@ export const CommandPalette = ({ open, onClose }: CommandPaletteProps) => {
           {commandItems.map((item) => (
             <div
               key={item.id}
-              className="flex cursor-pointer items-center justify-between px-4 py-2 text-[13px] hover:bg-primary-container hover:text-white"
+              className="flex cursor-pointer items-center justify-between px-4 py-2 text-[13px] hover:bg-primary-container hover:text-on-primary"
             >
               <div className="flex items-center gap-3">
                 <Icon name={item.icon} className="text-primary" />

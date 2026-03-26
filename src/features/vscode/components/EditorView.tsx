@@ -3,6 +3,7 @@ import { Highlight, themes } from 'prism-react-renderer'
 import type { PortfolioFile } from '../data/files'
 import { JsonView } from './JsonView'
 import { MarkdownView } from './MarkdownView'
+import { useSettings } from '../state/useSettings'
 
 type EditorViewProps = {
   file?: PortfolioFile
@@ -10,8 +11,12 @@ type EditorViewProps = {
 }
 
 export const EditorView = ({ file, mode }: EditorViewProps) => {
+  const { layout } = useSettings()
   return (
-    <div className="flex-1 min-w-0 overflow-auto bg-[#131313] p-6">
+    <div className={[
+      'flex-1 min-w-0 overflow-auto bg-surface',
+      layout === 'compact' ? 'p-4' : 'p-6',
+    ].join(' ')}>
       {!file && (
         <div className="flex h-full items-center justify-center font-mono text-on-surface-variant">
           Select a file from the explorer to begin.
@@ -35,9 +40,11 @@ type CodeBlockProps = {
 
 const CodeBlock = ({ code, language = 'tsx' }: CodeBlockProps) => {
   const trimmed = useMemo(() => code.trim(), [code])
+  const { theme } = useSettings()
+  const prismTheme = theme === 'light' ? themes.vsLight : themes.vsDark
   return (
-    <div className="rounded-2xl border border-zinc-800/70 bg-[#0b0b0d] p-4">
-      <Highlight code={trimmed} language={language as any} theme={themes.vsDark}>
+    <div className="rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-4">
+      <Highlight code={trimmed} language={language as any} theme={prismTheme}>
         {({ className, style, tokens, getLineProps, getTokenProps }: any) => (
           <pre
             className={`${className} max-h-[70vh] overflow-auto whitespace-pre-wrap break-words rounded-2xl text-sm`}

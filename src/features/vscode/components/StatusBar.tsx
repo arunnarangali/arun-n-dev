@@ -3,7 +3,7 @@ import { scmInfo } from '../../../portfolio/scm'
 
 export const StatusBar = () => {
   return (
-    <footer className="vscode-scrollbar fixed bottom-0 left-0 z-50 flex h-6 w-full overflow-x-auto bg-[#007ACC] px-2 font-mono text-[9px] text-white shadow-lg md:px-3 md:text-[10px]">
+    <footer className="vscode-scrollbar fixed bottom-0 left-0 z-50 flex h-6 w-full overflow-x-auto bg-primary-container px-2 font-mono text-[9px] text-on-primary shadow-lg md:px-3 md:text-[10px]">
       <div className="flex w-max min-w-max items-center gap-4 whitespace-nowrap md:w-full md:min-w-0 md:justify-between">
         <div className="flex items-center gap-2">
         <span className="flex items-center gap-1 px-2">

@@ -1,9 +1,20 @@
 <!doctype html>
-<html class="dark" lang="en">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        const root = document.documentElement
+        const theme = localStorage.getItem('vscode-theme')
+        const layout = localStorage.getItem('vscode-layout')
+        const allowedThemes = ['dark', 'light', 'highContrast']
+        const allowedLayouts = ['comfortable', 'compact']
+        if (allowedThemes.includes(theme)) root.classList.add(`theme-${theme}`)
+        if (allowedLayouts.includes(layout)) root.classList.add(`layout-${layout}`)
+      })()
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

@@ -26,7 +26,7 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
     <Modal isOpen={isOpen} onClose={onClose} title="Profile" icon="account_circle">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-2xl font-bold text-white">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent/70 text-2xl font-bold text-on-accent">
             AN
           </div>
           <div>
@@ -36,7 +36,7 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
               {aboutContent.highlights.map((highlight) => (
                 <span
                   key={highlight}
-                  className="rounded-full bg-[#2a2a2a] px-2 py-0.5 text-[10px] text-secondary/80"
+                  className="rounded-full bg-surface-container-high px-2 py-0.5 text-[10px] text-secondary/80"
                 >
                   {highlight}
                 </span>
@@ -55,14 +55,14 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
             {stats.map((stat) => (
               <div
                 key={stat.label}
-                className="flex items-center gap-2 rounded border border-[#2a2a2a] bg-[#131316] p-3"
+                className="flex items-center gap-2 rounded border border-outline-variant bg-surface-container-lowest p-3"
               >
                 <Icon
                   name={stat.icon}
-                  className={`text-lg ${stat.highlight ? 'text-emerald-400' : 'text-secondary/60'}`}
+                  className={`text-lg ${stat.highlight ? 'text-accent' : 'text-secondary/60'}`}
                 />
                 <div>
-                  <p className={`text-xs ${stat.highlight ? 'text-emerald-400' : 'text-on-surface'}`}>
+                  <p className={`text-xs ${stat.highlight ? 'text-accent' : 'text-on-surface'}`}>
                     {stat.value}
                   </p>
                   <p className="text-[10px] text-secondary/60">{stat.label}</p>
@@ -81,7 +81,7 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
                 href={social.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between rounded border border-[#2a2a2a] bg-[#131316] p-3 transition-all hover:border-emerald-400/40 hover:bg-[#1a1a1d]"
+                className="flex items-center justify-between rounded border border-outline-variant bg-surface-container-lowest p-3 transition-all hover:border-accent/40 hover:bg-surface-container"
               >
                 <div className="flex items-center gap-2">
                   <Icon

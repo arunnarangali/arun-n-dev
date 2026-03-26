@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { runSearch, type SearchGroup, type SearchMatch } from '../../../../portfolio/searchIndex'
 import { useSearchHighlight } from '../../state/SearchContext'
+import { useSettings } from '../../state/useSettings'
+import { Icon } from '../Icon'
 
 type SearchPanelProps = {
   onSelect: (id: string) => void
@@ -11,24 +13,36 @@ type SearchPanelProps = {
 export const SearchPanel = ({ onSelect, variant = 'sidebar', onClose }: SearchPanelProps) => {
   const [query, setQuery] = useState('')
   const { setQuery: setHighlightQuery } = useSearchHighlight()
+  const { layout } = useSettings()
   const results: SearchGroup[] = useMemo(() => (query.trim().length ? runSearch(query.trim()) : []), [query])
 
   return (
     <aside
-      className={`flex flex-col bg-[#1B1B1C] font-mono text-[11px] uppercase tracking-wider ${
+      className={`flex flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider ${
         variant === 'overlay' ? 'h-full w-full' : 'w-72'
       }`}
     >
       <div className="px-4 py-3">
-        <input
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value)
-            setHighlightQuery(event.target.value)
-          }}
-          placeholder="Search portfolio..."
-          className="w-full rounded bg-[#0f0f11] px-3 py-2 text-sm text-on-surface"
-        />
+        <div className="relative">
+          <input
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value)
+              setHighlightQuery(event.target.value)
+            }}
+            placeholder="Search portfolio..."
+            className={[
+              'w-full rounded bg-surface-container-lowest text-on-surface',
+              layout === 'compact' ? 'px-3 py-1.5 text-xs pr-10' : 'px-3 py-2 text-sm pr-12',
+            ].join(' ')}
+          />
+          <Icon
+            name="search"
+            className={`absolute right-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none ${
+              layout === 'compact' ? 'text-sm' : 'text-base'
+            }`}
+          />
+        </div>
       </div>
       <div className="vscode-scrollbar flex-1 overflow-auto px-4 text-left normal-case text-xs text-on-surface">
         {results.length === 0 && <p className="px-2 py-4 text-on-surface-variant">Type to search across projects, experience, and skills.</p>}
@@ -43,7 +57,7 @@ export const SearchPanel = ({ onSelect, variant = 'sidebar', onClose }: SearchPa
                     onSelect(group.fileId)
                     if (variant === 'overlay') onClose?.()
                   }}
-                  className="w-full rounded bg-[#101012] px-2 py-2 text-left text-on-surface hover:bg-[#161618]"
+                  className="w-full rounded bg-surface-container-lowest px-2 py-2 text-left text-on-surface hover:bg-surface-container"
                 >
                   <div className="text-[10px] text-secondary">
                     Line {match.line}

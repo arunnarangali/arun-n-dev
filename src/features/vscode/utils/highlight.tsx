@@ -4,7 +4,7 @@ export const highlightText = (text: string, query: string) => {
   const parts = text.split(regex)
   return parts.map((part, index) =>
     index % 2 === 1 ? (
-      <mark key={`${part}-${index}`} className="bg-emerald-500/30 text-white">
+      <mark key={`${part}-${index}`} className="search-mark">
         {part}
       </mark>
     ) : (

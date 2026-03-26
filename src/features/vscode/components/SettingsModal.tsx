@@ -35,48 +35,48 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Settings" icon="settings">
-      <div className="space-y-6">
+      <div className="space-y-4">
         <section>
-          <h3 className="mb-3 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Theme</h3>
+          <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Theme</h3>
           <div className="grid grid-cols-3 gap-2">
             {themes.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
-                className={`flex flex-col items-center gap-2 rounded border p-3 transition-all ${
+                className={`flex flex-col items-center gap-1 rounded border transition-all ${
                   theme === t.id
-                    ? 'border-emerald-400/60 bg-[#1a3a1a]'
-                    : 'border-[#2a2a2a] bg-[#131316] hover:border-emerald-400/40'
-                }`}
+                    ? 'border-accent/60 bg-accent/10'
+                    : 'border-outline-variant bg-surface-container-lowest hover:border-accent/40'
+                } ${layout === 'compact' ? 'p-1.5' : 'p-2'}`}
               >
-                <Icon name={t.icon} className="text-xl text-on-surface" />
-                <span className="text-[10px] text-on-surface">{t.label}</span>
-                {theme === t.id && <Icon name="check" className="text-emerald-400 text-[12px]" />}
+                <Icon name={t.icon} className="text-lg text-on-surface" />
+                <span className={layout === 'compact' ? 'text-[9px]' : 'text-[10px]'} text-on-surface>{t.label}</span>
+                {theme === t.id && <Icon name="check" className="text-accent text-[10px]" />}
               </button>
             ))}
           </div>
         </section>
 
         <section>
-          <h3 className="mb-3 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Layout Mode</h3>
-          <div className="space-y-2">
+          <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Layout Mode</h3>
+          <div className="space-y-1.5">
             {layouts.map((l) => (
               <button
                 key={l.id}
                 onClick={() => setLayout(l.id)}
-                className={`flex w-full items-center justify-between rounded border p-3 text-left transition-all ${
+                className={`flex w-full items-center justify-between rounded border p-2 text-left transition-all ${
                   layout === l.id
-                    ? 'border-emerald-400/60 bg-[#1a3a1a]'
-                    : 'border-[#2a2a2a] bg-[#131316] hover:border-emerald-400/40'
+                    ? 'border-accent/60 bg-accent/10'
+                    : 'border-outline-variant bg-surface-container-lowest hover:border-accent/40'
                 }`}
               >
                 <div>
-                  <span className="text-xs text-on-surface">{l.label}</span>
-                  <p className="text-[10px] text-secondary/60">{l.description}</p>
+                  <span className="text-[11px] text-on-surface">{l.label}</span>
+                  <p className="text-[9px] text-secondary/60">{l.description}</p>
                 </div>
                 <Icon
                   name={layout === l.id ? 'radio_button_checked' : 'radio_button_unchecked'}
-                  className={layout === l.id ? 'text-emerald-400' : 'text-secondary/40'}
+                  className={layout === l.id ? 'text-accent' : 'text-secondary/40'}
                 />
               </button>
             ))}
@@ -84,9 +84,9 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
         </section>
 
         <section>
-          <h3 className="mb-3 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Resume</h3>
-          <button className="flex w-full items-center justify-center gap-2 rounded bg-[#007ACC] px-4 py-3 text-xs font-medium text-white transition-colors hover:bg-[#005A9E]">
-            <Icon name="download" className="text-[16px]" />
+          <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Resume</h3>
+          <button className="flex w-full items-center justify-center gap-2 rounded bg-primary-container px-3 py-2 text-[11px] font-medium text-on-primary transition-colors hover:bg-primary">
+            <Icon name="download" className="text-[14px]" />
             Download Resume (PDF)
           </button>
         </section>
