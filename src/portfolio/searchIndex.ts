@@ -5,7 +5,7 @@ export type SearchGroup = { fileId: string; fileName: string; matches: SearchMat
 
 const buildPreview = (text: string, query: string) => {
   const regex = new RegExp(`(${query.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi')
-  return text.replace(regex, '<mark class="bg-emerald-500/30">$1</mark>')
+  return text.replace(regex, '<mark class="search-mark">$1</mark>')
 }
 
 export const runSearch = (query: string): SearchGroup[] => {

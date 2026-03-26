@@ -8,7 +8,7 @@ export const FloatingContact = () => {
       href={WHATSAPP_PLACEHOLDER}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-16 right-4 z-40 flex items-center gap-2 rounded-full px-4 py-3 text-xs font-medium text-white shadow-lg shadow-black/30 transition-all md:bottom-6 md:px-6"
+      className="fixed bottom-16 right-4 z-40 flex items-center gap-2 rounded-full px-4 py-3 text-xs font-medium text-on-primary shadow-lg shadow-black/30 transition-all md:bottom-6 md:px-6"
       style={{ backgroundColor: 'var(--accent-primary)' }}
     >
       <Icon name="chat" className="text-[20px]" />

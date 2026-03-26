@@ -12,7 +12,7 @@ export const MarkdownView = ({ source }: MarkdownViewProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded border border-outline-variant bg-[#1E1E1E]">
+      <div className="rounded border border-outline-variant bg-surface-container">
         <header className="border-b border-outline-variant/40 px-4 py-2 text-[11px] uppercase tracking-widest text-on-surface-variant">
           Markdown Source
         </header>
@@ -23,7 +23,7 @@ export const MarkdownView = ({ source }: MarkdownViewProps) => {
           {source.trim()}
         </pre>
       </div>
-      <div className="rounded border border-outline-variant bg-[#1E1E1E]">
+      <div className="rounded border border-outline-variant bg-surface-container">
         <header className="border-b border-outline-variant/40 px-4 py-2 text-[11px] uppercase tracking-widest text-on-surface-variant">
           Rendered Preview
         </header>

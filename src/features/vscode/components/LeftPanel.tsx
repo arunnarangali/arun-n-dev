@@ -45,10 +45,10 @@ export const LeftPanel = ({ view, files, openFiles, activeId, onSelectFile, vari
 
   if (isOverlay && overlayTitles[view]) {
     return (
-      <div className="flex h-full w-full flex-col bg-[#1B1B1C] font-mono text-[11px] uppercase tracking-wider">
+      <div className="flex h-full w-full flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider">
         <div className="flex items-center justify-between px-4 py-3 text-on-surface">
           <span className="font-bold text-secondary/80">{overlayTitles[view]}</span>
-          <button onClick={onClose} className="rounded p-1 text-secondary hover:bg-[#2A2A2A]">
+          <button onClick={onClose} className="rounded p-1 text-secondary hover:bg-surface-container-high">
             <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
         </div>

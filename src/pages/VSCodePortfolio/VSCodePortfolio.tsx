@@ -53,7 +53,7 @@ export const VSCodePortfolio = () => {
   }, [activeFile?.id])
 
   return (
-    <div className={`flex h-full min-h-0 flex-col bg-surface pb-6 theme-${settings.theme}`}>
+    <div className={`flex h-full min-h-0 flex-col bg-surface pb-6 theme-${settings.theme} layout-${settings.layout}`}>
       <MacTitleBar />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <ActivityBar
@@ -89,7 +89,7 @@ export const VSCodePortfolio = () => {
             {activeFile?.kind === 'tsx' && (
               <button
                 onClick={() => setEditorMode((mode) => (mode === 'preview' ? 'code' : 'preview'))}
-                className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-emerald-400/40 bg-[#0f0f11] text-emerald-200 shadow-lg shadow-black/30 transition hover:border-emerald-300"
+                className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-emerald-400/40 bg-surface-container-lowest text-emerald-500 shadow-lg shadow-black/30 transition hover:border-emerald-300"
                 aria-label={editorMode === 'preview' ? 'View code' : 'View preview'}
                 title={editorMode === 'preview' ? 'View code' : 'View preview'}
               >
@@ -105,7 +105,7 @@ export const VSCodePortfolio = () => {
       {workbench.isLeftPanelOpen && (
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60" onClick={workbench.closePanel} />
-          <div className="absolute inset-y-0 right-0 w-full animate-slide-in bg-[#1B1B1C]">
+          <div className="absolute inset-y-0 right-0 w-full animate-slide-in bg-surface-container-low">
             <LeftPanel
               view={workbench.activeView}
               files={portfolioFiles}
