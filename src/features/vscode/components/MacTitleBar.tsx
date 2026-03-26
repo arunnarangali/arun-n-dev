@@ -9,6 +9,11 @@ type MacTitleBarProps = {
   canTogglePreview: boolean
   editorMode: 'preview' | 'code'
   onToggleEditorMode: () => void
+  splitToggle?: {
+    visible: boolean
+    isSplit: boolean
+    onToggle: () => void
+  }
 }
 
 type MenuItem = {
@@ -30,6 +35,7 @@ export const MacTitleBar = ({
   canTogglePreview,
   editorMode,
   onToggleEditorMode,
+  splitToggle,
 }: MacTitleBarProps) => {
   const [isMenuOpen, setMenuOpen] = useState(false)
   const [feedback, setFeedback] = useState('')
@@ -160,6 +166,8 @@ export const MacTitleBar = ({
     },
   ]
 
+  const buttonBase = 'flex h-7 w-7 shrink-0 items-center justify-center rounded transition-colors hover:bg-surface-container-high'
+
   return (
     <header className="relative flex h-9 w-full items-center justify-between border-b border-outline-variant bg-surface-container-low px-3 text-sm font-medium text-on-surface">
       <div className="flex items-center gap-2">
@@ -170,20 +178,29 @@ export const MacTitleBar = ({
         </div>
         <span className="font-headline text-xs tracking-tight text-on-surface/80">portfolio — Visual Studio Code</span>
       </div>
-      <div className="flex items-center gap-3 text-primary/80">
+      <div className="flex items-center gap-2 text-primary/80">
         <button
           onClick={onToggleTerminal}
-          className={`rounded p-1 transition-colors hover:bg-surface-container-high ${isTerminalOpen ? 'text-on-surface' : ''}`}
+          className={`${buttonBase} ${isTerminalOpen ? 'text-on-surface' : ''}`}
           aria-pressed={isTerminalOpen}
           title={isTerminalOpen ? 'Hide terminal' : 'Show terminal'}
         >
-          <Icon name="splitscreen" />
+          <Icon name="terminal" />
         </button>
+        {splitToggle?.visible && (
+          <button
+            onClick={splitToggle.onToggle}
+            className={`${buttonBase} ${splitToggle.isSplit ? 'text-on-surface' : ''}`}
+            aria-pressed={splitToggle.isSplit}
+            title={splitToggle.isSplit ? 'Close split editor' : 'Split editor'}
+          >
+            <Icon name="splitscreen" />
+          </button>
+        )}
         <button
           onClick={onToggleEditorMode}
           disabled={!canTogglePreview}
-          className={`rounded p-1 transition-colors hover:bg-surface-container-high ${canTogglePreview ? 'text-primary/80' : 'text-secondary/40'} ${editorMode === 'code' ? 'text-on-surface' : ''
-            }`}
+          className={`${buttonBase} ${canTogglePreview ? 'text-primary/80' : 'text-secondary/40'} ${editorMode === 'code' ? 'text-on-surface' : ''}`}
           title={canTogglePreview ? (editorMode === 'preview' ? 'View component code' : 'View live preview') : 'Code preview unavailable'}
         >
           <Icon name={editorMode === 'preview' ? 'dock_to_right' : 'code'} />
@@ -191,7 +208,7 @@ export const MacTitleBar = ({
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen((open) => !open)}
-            className={`rounded p-1 transition-colors hover:bg-surface-container-high ${isMenuOpen ? 'text-on-surface' : ''}`}
+            className={`${buttonBase} ${isMenuOpen ? 'text-on-surface' : ''}`}
             aria-expanded={isMenuOpen}
             aria-haspopup="menu"
             title="More actions"

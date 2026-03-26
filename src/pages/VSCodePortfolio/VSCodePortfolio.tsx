@@ -1,13 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { portfolioFiles } from '../../features/vscode/data/files'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { getFileById, portfolioFiles } from '../../features/vscode/data/files'
 import { useWorkspace } from '../../features/vscode/state/useWorkspace'
 import { useWorkbench } from '../../features/vscode/state/useWorkbench'
 import { useSettings } from '../../features/vscode/state/useSettings'
 import { ActivityBar } from '../../features/vscode/components/ActivityBar'
-import { Breadcrumbs } from '../../features/vscode/components/Breadcrumbs'
 import { CommandPalette } from '../../features/vscode/components/CommandPalette'
-import { EditorTabs } from '../../features/vscode/components/EditorTabs'
-import { EditorView } from '../../features/vscode/components/EditorView'
 import { FloatingContact } from '../../features/vscode/components/FloatingContact'
 import { LeftPanel } from '../../features/vscode/components/LeftPanel'
 import { MacTitleBar } from '../../features/vscode/components/MacTitleBar'
@@ -17,40 +14,52 @@ import { StatusBar } from '../../features/vscode/components/StatusBar'
 import { TerminalPanel } from '../../features/vscode/components/panels/TerminalPanel'
 import links from '../../portfolio/data/links.json'
 import { useResizablePanel } from '../../features/vscode/hooks/useResizablePanel'
+import { useEditorGroups, type EditorGroupId } from '../../features/vscode/state/useEditorGroups'
+import { EditorGroup } from '../../features/vscode/components/EditorGroup'
+import { useElementSize } from '../../features/vscode/hooks/useElementSize'
 
 const SIDEBAR_DEFAULT_WIDTH = 240
+const MIN_EDITOR_PANE = 320
 
 export const VSCodePortfolio = () => {
   const workbench = useWorkbench()
   const settings = useSettings()
-  const [editorMode, setEditorMode] = useState<'preview' | 'code'>('preview')
   const [isProfileOpen, setProfileOpen] = useState(false)
   const [isSettingsOpen, setSettingsOpen] = useState(false)
   const [isTerminalOpen, setTerminalOpen] = useState(false)
-  const [isDesktop, setIsDesktop] = useState(() => (typeof window === 'undefined' ? true : window.innerWidth >= 768))
+  const editorGroups = useEditorGroups()
+  const {
+    setActiveTabForGroup,
+    setActiveGroup,
+    removeTabFromGroup,
+    collapseGroup,
+    ensureTabsValid,
+    setExactGroupCount,
+    toggleGroupMode,
+  } = editorGroups
+  const { size: editorAreaSize, setElement: setEditorAreaElement } = useElementSize<HTMLDivElement>()
   const {
     openFiles,
-    activeFile,
-    activeTabId,
-    openFile,
+    addToOpenTabs,
     closeFile,
-    setActiveTabId,
     isCommandPaletteOpen,
     toggleCommandPalette,
     closeCommandPalette,
   } = useWorkspace()
+  const [isDesktop, setIsDesktop] = useState(() => (typeof window === 'undefined' ? true : window.innerWidth >= 768))
+  const fallbackFileId = useMemo(() => openFiles[0]?.id ?? portfolioFiles[0]?.id ?? '', [openFiles])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const mediaQuery = window.matchMedia('(min-width: 768px)')
-    const update = (event?: MediaQueryListEvent) => setIsDesktop(event ? event.matches : mediaQuery.matches)
-    update()
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', update)
-      return () => mediaQuery.removeEventListener('change', update)
+    const desktopQuery = window.matchMedia('(min-width: 768px)')
+    const updateDesktop = (event?: MediaQueryListEvent) => setIsDesktop(event ? event.matches : desktopQuery.matches)
+    updateDesktop()
+    if (desktopQuery.addEventListener) {
+      desktopQuery.addEventListener('change', updateDesktop)
+      return () => desktopQuery.removeEventListener('change', updateDesktop)
     }
-    mediaQuery.addListener(update)
-    return () => mediaQuery.removeListener(update)
+    desktopQuery.addListener(updateDesktop)
+    return () => desktopQuery.removeListener(updateDesktop)
   }, [])
 
   useEffect(() => {
@@ -69,15 +78,79 @@ export const VSCodePortfolio = () => {
   }, [toggleCommandPalette, closeCommandPalette])
 
   useEffect(() => {
-    setEditorMode('preview')
-  }, [activeFile?.id])
+    if (!isDesktop && editorGroups.groupCount > 1) {
+      setExactGroupCount(1, editorGroups.activeGroup, fallbackFileId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDesktop, fallbackFileId, setExactGroupCount])
 
-  const canTogglePreview = useMemo(() => activeFile?.kind === 'tsx', [activeFile?.kind])
+  useEffect(() => {
+    if (!fallbackFileId) return
+    ensureTabsValid(
+      openFiles.map((file) => file.id),
+      fallbackFileId,
+    )
+  }, [openFiles, fallbackFileId, ensureTabsValid])
 
-  const handleToggleEditorMode = useCallback(() => {
+  const handleOpenFile = useCallback(
+    (id: string, targetGroup: EditorGroupId = editorGroups.activeGroup) => {
+      addToOpenTabs(id)
+      setActiveTabForGroup(targetGroup, id)
+      setActiveGroup(targetGroup)
+    },
+    [addToOpenTabs, setActiveTabForGroup, setActiveGroup],
+  )
+
+  const handleSelectTab = useCallback(
+    (groupId: EditorGroupId, id: string) => {
+      setActiveTabForGroup(groupId, id)
+      setActiveGroup(groupId)
+    },
+    [setActiveTabForGroup, setActiveGroup],
+  )
+
+  const focusGroup = useCallback(
+    (groupId: EditorGroupId) => {
+      setActiveGroup(groupId)
+    },
+    [setActiveGroup],
+  )
+
+  const handleCloseTab = useCallback(
+    (groupId: EditorGroupId, id: string) => {
+      const currentGroupTabs = editorGroups.tabsByGroup[groupId] ?? []
+      const willBeEmpty = currentGroupTabs.length === 1 && currentGroupTabs[0] === id
+
+      const nextTabs = currentGroupTabs.filter((tabId) => tabId !== id)
+      const fallbackId = nextTabs[nextTabs.length - 1] ?? fallbackFileId
+      removeTabFromGroup(groupId, id, fallbackId)
+
+      const tabStillOpenElsewhere = Object.entries(editorGroups.tabsByGroup).some(([key, tabs]) => {
+        const otherGroup = Number(key) as EditorGroupId
+        if (otherGroup === groupId) return false
+        return tabs.includes(id)
+      })
+      if (!tabStillOpenElsewhere) {
+        closeFile(id)
+      }
+
+      if (willBeEmpty && editorGroups.groupCount > 1) {
+        collapseGroup(groupId)
+      }
+    },
+    [closeFile, removeTabFromGroup, collapseGroup, fallbackFileId, editorGroups.tabsByGroup, editorGroups.groupCount],
+  )
+
+  const currentGroupId = editorGroups.activeGroup
+  const currentFileId = editorGroups.activeTabByGroup[currentGroupId]
+  const currentFile = useMemo(() => getFileById(currentFileId) ?? openFiles[0], [currentFileId, openFiles])
+  const currentMode = editorGroups.modeByGroup[currentGroupId] ?? 'preview'
+  const canTogglePreview = currentFile?.kind === 'tsx'
+
+  const handleToggleCurrentMode = () => {
     if (!canTogglePreview) return
-    setEditorMode((mode) => (mode === 'preview' ? 'code' : 'preview'))
-  }, [canTogglePreview])
+    toggleGroupMode(currentGroupId)
+  }
 
   const sidebarResize = useResizablePanel({
     axis: 'x',
@@ -90,14 +163,85 @@ export const VSCodePortfolio = () => {
 
   const sidebarHandleProps = sidebarResize.getHandleProps()
 
+  const editorWidthFallback = typeof window !== 'undefined' ? window.innerWidth - SIDEBAR_DEFAULT_WIDTH : 1200
+  const editorWidth = Math.max(editorAreaSize.width || editorWidthFallback, MIN_EDITOR_PANE * editorGroups.groupCount)
+
+  const splitOne = useResizablePanel({
+    axis: 'x',
+    storageKey: 'vscode-editor-split-1',
+    defaultSize: Math.max(MIN_EDITOR_PANE, editorWidth / 2),
+    min: MIN_EDITOR_PANE,
+    getMax: () => Math.max(MIN_EDITOR_PANE, editorWidth - MIN_EDITOR_PANE),
+    enabled: editorGroups.groupCount > 1,
+  })
+
+  const SPLITTER_WIDTH = 6
+  const availableWidth = Math.max(
+    (editorGroups.groupCount === 2 ? editorWidth - SPLITTER_WIDTH : editorWidth),
+    MIN_EDITOR_PANE * editorGroups.groupCount,
+  )
+
+  const setGroupCountWithMirror = useCallback(
+    (count: 1 | 2) => {
+      const fileId = currentFile?.id ?? fallbackFileId
+      const previous = editorGroups.groupCount
+      editorGroups.setExactGroupCount(count, editorGroups.activeGroup, fileId)
+      if (count === 2 && previous !== 2) {
+        const newAvailable = Math.max(editorWidth - SPLITTER_WIDTH, MIN_EDITOR_PANE * 2)
+        splitOne.setSize(Math.max(MIN_EDITOR_PANE, newAvailable / 2))
+      }
+    },
+    [SPLITTER_WIDTH, currentFile?.id, editorGroups, fallbackFileId, editorWidth, splitOne],
+  )
+
+  const handlePrimarySplitToggle = useCallback(() => {
+    if (!isDesktop) return
+    setGroupCountWithMirror(editorGroups.groupCount === 1 ? 2 : 1)
+  }, [editorGroups.groupCount, isDesktop, setGroupCountWithMirror])
+
+  const groupWidths = useMemo(() => {
+    if (editorGroups.groupCount === 1) {
+      return [availableWidth]
+    }
+    const maxFirst = availableWidth - MIN_EDITOR_PANE
+    const first = Math.min(Math.max(MIN_EDITOR_PANE, splitOne.size), maxFirst)
+    const second = Math.max(MIN_EDITOR_PANE, availableWidth - first)
+    return [first, second]
+  }, [availableWidth, editorGroups.groupCount, splitOne.size])
+
+  const visibleGroups = useMemo(() => Array.from({ length: editorGroups.groupCount }, (_, index) => index as EditorGroupId), [editorGroups.groupCount])
+
+  const renderSplitter = () => {
+    const splitter = splitOne
+    return (
+      <div className="relative hidden h-full w-[6px] md:block">
+        <div
+          className={`absolute inset-y-0 left-0 w-[6px] cursor-col-resize rounded-sm transition-opacity ${splitter.isResizing ? 'opacity-100 bg-primary/40' : 'opacity-0 group-hover/editor:opacity-100 hover:bg-primary/30'
+            }`}
+          {...splitter.getHandleProps()}
+          onDoubleClick={(event) => {
+            event.preventDefault()
+            const resetWidth = Math.max(MIN_EDITOR_PANE, availableWidth / 2)
+            splitter.setSize(resetWidth)
+          }}
+        />
+      </div>
+    )
+  }
+
   return (
-    <div className={`flex h-full min-h-0 flex-col bg-surface pb-6 theme-${settings.theme} layout-${settings.layout}`}>
+    <div className={`flex h-full min-h-0 w-full flex-col overflow-hidden bg-surface pb-6 theme-${settings.theme} layout-${settings.layout}`}>
       <MacTitleBar
         isTerminalOpen={isTerminalOpen}
         onToggleTerminal={() => setTerminalOpen((current) => !current)}
-        editorMode={editorMode}
-        onToggleEditorMode={handleToggleEditorMode}
-        canTogglePreview={canTogglePreview}
+        editorMode={currentMode}
+        onToggleEditorMode={handleToggleCurrentMode}
+        canTogglePreview={Boolean(canTogglePreview)}
+        splitToggle={{
+          visible: isDesktop,
+          isSplit: editorGroups.groupCount === 2,
+          onToggle: handlePrimarySplitToggle,
+        }}
       />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <ActivityBar
@@ -109,21 +253,17 @@ export const VSCodePortfolio = () => {
         />
         <div className="hidden md:flex">
           {workbench.isLeftPanelOpen && (
-            <div
-              className="group/sidebar relative flex h-full"
-              style={{ width: `${sidebarResize.size}px` }}
-            >
+            <div className="group/sidebar relative flex h-full" style={{ width: `${sidebarResize.size}px` }}>
               <LeftPanel
                 view={workbench.activeView}
                 files={portfolioFiles}
                 openFiles={openFiles}
-                activeId={activeTabId}
-                onSelectFile={openFile}
+                activeId={currentFile?.id ?? ''}
+                onSelectFile={handleOpenFile}
               />
               <div
-                className={`absolute right-0 top-0 hidden h-full w-[6px] cursor-col-resize rounded-sm transition-opacity md:block ${
-                  sidebarResize.isResizing ? 'opacity-100 bg-primary/40' : 'opacity-0 group-hover/sidebar:opacity-100 hover:bg-primary/30'
-                }`}
+                className={`absolute right-0 top-0 hidden h-full w-[6px] cursor-col-resize rounded-sm transition-opacity md:block ${sidebarResize.isResizing ? 'opacity-100 bg-primary/40' : 'opacity-0 group-hover/sidebar:opacity-100 hover:bg-primary/30'
+                  }`}
                 {...sidebarHandleProps}
                 onDoubleClick={(event) => {
                   event.preventDefault()
@@ -134,44 +274,54 @@ export const VSCodePortfolio = () => {
           )}
         </div>
         <main className="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden">
-          <EditorTabs
-            tabs={openFiles}
-            activeId={activeTabId}
-            onSelect={(id) => {
-              setActiveTabId(id)
-              setEditorMode('preview')
-            }}
-            onClose={closeFile}
+          <div className="flex-1 min-h-0" ref={setEditorAreaElement}>
+            <div className="group/editor flex h-full min-h-0 overflow-hidden">
+              {visibleGroups.map((groupId, index) => {
+                const fileId = editorGroups.activeTabByGroup[groupId]
+                const groupTabIds = editorGroups.tabsByGroup[groupId]
+                const groupTabs = groupTabIds
+                  .map((tabId) => getFileById(tabId))
+                  .filter((f): f is NonNullable<typeof f> => Boolean(f))
+                const file = groupTabs.find((tab) => tab.id === fileId) ?? groupTabs[groupTabs.length - 1] ?? openFiles[0]
+                const mode = editorGroups.modeByGroup[groupId] ?? 'preview'
+                const canGroupToggle = file?.kind === 'tsx'
+                return (
+                  <Fragment key={`editor-group-${groupId}`}>
+                    <div className="flex min-w-0 flex-col" style={{ width: `${groupWidths[index]}px` }}>
+                      <EditorGroup
+                        tabs={groupTabs}
+                        activeTabId={file?.id}
+                        onSelectTab={(id) => handleSelectTab(groupId, id)}
+                        onCloseTab={(id) => handleCloseTab(groupId, id)}
+                        file={file}
+                        mode={mode}
+                        canTogglePreview={Boolean(canGroupToggle)}
+                        onToggleMode={() => {
+                          if (canGroupToggle) {
+                            editorGroups.toggleGroupMode(groupId)
+                          }
+                        }}
+                        onFocus={() => focusGroup(groupId)}
+                        isFocused={editorGroups.activeGroup === groupId}
+                      />
+                    </div>
+                    {index < visibleGroups.length - 1 && renderSplitter()}
+                  </Fragment>
+                )
+              })}
+            </div>
+          </div>
+          <TerminalPanel
+            open={isTerminalOpen}
+            onClose={() => setTerminalOpen(false)}
+            files={portfolioFiles}
+            onOpenFile={(id) => handleOpenFile(id)}
+            theme={settings.theme}
+            layout={settings.layout}
+            setTheme={settings.setTheme}
+            setLayout={settings.setLayout}
+            links={links as Record<string, string | undefined>}
           />
-          <div className="flex items-center justify-between px-4 py-2">
-            <Breadcrumbs path={activeFile?.path} />
-            {canTogglePreview && (
-              <button
-                onClick={handleToggleEditorMode}
-                className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-emerald-400/40 bg-surface-container-lowest text-emerald-500 shadow-lg shadow-black/30 transition hover:border-emerald-300"
-                aria-label={editorMode === 'preview' ? 'View code' : 'View preview'}
-                title={editorMode === 'preview' ? 'View code' : 'View preview'}
-              >
-                <span className="material-symbols-outlined">
-                  {editorMode === 'preview' ? 'code' : 'visibility'}
-                </span>
-              </button>
-            )}
-          </div>
-          <div className="flex flex-1 min-h-0 flex-col">
-            <EditorView file={activeFile} mode={editorMode} />
-            <TerminalPanel
-              open={isTerminalOpen}
-              onClose={() => setTerminalOpen(false)}
-              files={portfolioFiles}
-              onOpenFile={openFile}
-              theme={settings.theme}
-              layout={settings.layout}
-              setTheme={settings.setTheme}
-              setLayout={settings.setLayout}
-              links={links as Record<string, string | undefined>}
-            />
-          </div>
         </main>
       </div>
       {workbench.isLeftPanelOpen && (
@@ -182,8 +332,8 @@ export const VSCodePortfolio = () => {
               view={workbench.activeView}
               files={portfolioFiles}
               openFiles={openFiles}
-              activeId={activeTabId}
-              onSelectFile={openFile}
+              activeId={currentFile?.id ?? ''}
+              onSelectFile={handleOpenFile}
               variant="overlay"
               onClose={workbench.closePanel}
             />

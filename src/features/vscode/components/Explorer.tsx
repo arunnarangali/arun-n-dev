@@ -81,7 +81,7 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
               if (variant === 'overlay') onClose?.()
             }}
             className={[
-              'flex items-center justify-between text-left transition-colors',
+              'flex w-full items-center justify-between text-left transition-colors',
               isCompact ? 'py-0.5' : 'py-1',
               isActive ? 'border-l-2 border-primary bg-surface-container-high text-on-surface' : 'text-secondary/70 hover:bg-surface-container-high hover:text-on-surface',
             ].join(' ')}

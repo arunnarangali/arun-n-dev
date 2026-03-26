@@ -24,6 +24,11 @@ export const useWorkspace = () => {
     setActiveTabId(id)
   }, [])
 
+  const addToOpenTabs = useCallback((id: string) => {
+    if (!getFileById(id)) return
+    setOpenTabs((tabs) => (tabs.includes(id) ? tabs : [...tabs, id]))
+  }, [])
+
   const closeFile = useCallback(
     (id: string) => {
       setOpenTabs((tabs) => {
@@ -58,6 +63,7 @@ export const useWorkspace = () => {
     activeTabId,
     activeFile,
     openFile,
+    addToOpenTabs,
     closeFile,
     setActiveTabId,
     isCommandPaletteOpen,

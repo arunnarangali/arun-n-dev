@@ -14,7 +14,7 @@ export const EditorView = ({ file, mode }: EditorViewProps) => {
   const { layout } = useSettings()
   return (
     <div className={[
-      'flex-1 min-w-0 overflow-auto bg-surface',
+      'h-full w-full min-w-0 overflow-x-hidden overflow-y-auto bg-surface',
       layout === 'compact' ? 'p-4' : 'p-6',
     ].join(' ')}>
       {!file && (
@@ -25,7 +25,7 @@ export const EditorView = ({ file, mode }: EditorViewProps) => {
       {file?.kind === 'json' && <JsonView source={file.source} />}
       {file?.kind === 'markdown' && <MarkdownView source={file.source} />}
       {file?.kind === 'tsx' && file.preview && (
-        <div className="space-y-4">
+        <div className="h-full w-full min-w-0">
           {mode === 'preview' ? <file.preview /> : <CodeBlock code={file.source} language={file.language} />}
         </div>
       )}
