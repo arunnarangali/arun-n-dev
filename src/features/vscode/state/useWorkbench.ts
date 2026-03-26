@@ -24,14 +24,14 @@ export const useWorkbench = () => {
     window.localStorage.setItem(VIEW_STORAGE_KEY, activeView)
   }, [activeView])
 
-  const toggleExplorer = () => {
-    setActiveView('explorer')
-    setLeftPanelOpen((prev) => !prev)
-  }
 
-  const openView = (view: WorkbenchView) => {
-    setActiveView(view)
-    setLeftPanelOpen(true)
+  const toggleView = (view: WorkbenchView) => {
+    if (activeView === view && isLeftPanelOpen) {
+      setLeftPanelOpen(false)
+    } else {
+      setActiveView(view)
+      setLeftPanelOpen(true)
+    }
   }
 
   const closePanel = () => setLeftPanelOpen(false)
@@ -39,8 +39,8 @@ export const useWorkbench = () => {
   return {
     activeView,
     isLeftPanelOpen,
-    openView,
-    toggleExplorer,
+    openView: toggleView,
+    toggleExplorer: () => toggleView('explorer'),
     closePanel,
   }
 }

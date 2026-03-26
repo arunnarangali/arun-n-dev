@@ -2,7 +2,7 @@ import { heroContent } from './content'
 
 export const HomeSection = () => {
   return (
-    <section className="mx-auto w-full max-w-5xl space-y-10 rounded-2xl border border-outline-variant bg-surface-container-low p-6 text-on-surface shadow-2xl shadow-black/40 md:p-10">
+    <section className="mx-auto w-full space-y-10 rounded-2xl border border-outline-variant bg-surface-container-low p-6 text-on-surface shadow-2xl shadow-black/40 md:p-10">
       <div className="space-y-4">
         <p className="text-xs uppercase tracking-[0.4em] text-on-surface-variant">Portfolio / Home.tsx</p>
         <h1 className="text-4xl font-semibold leading-tight md:text-5xl">{heroContent.title}</h1>

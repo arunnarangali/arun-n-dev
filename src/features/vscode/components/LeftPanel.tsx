@@ -39,6 +39,7 @@ export const LeftPanel = ({ view, files, openFiles, activeId, onSelectFile, vari
         activeId={activeId}
         onSelect={onSelectFile}
         variant={variant}
+        onClose={onClose}
       />
     )
   }

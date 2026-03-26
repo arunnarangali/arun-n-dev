@@ -18,9 +18,8 @@ export const SearchPanel = ({ onSelect, variant = 'sidebar', onClose }: SearchPa
 
   return (
     <aside
-      className={`flex flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider ${
-        variant === 'overlay' ? 'h-full w-full' : 'w-full'
-      }`}
+      className={`flex flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider ${variant === 'overlay' ? 'h-full w-full' : 'w-full'
+        }`}
     >
       <div className="px-4 py-3">
         <div className="relative">
@@ -38,19 +37,18 @@ export const SearchPanel = ({ onSelect, variant = 'sidebar', onClose }: SearchPa
           />
           <Icon
             name="search"
-            className={`absolute right-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none ${
-              layout === 'compact' ? 'text-sm' : 'text-base'
-            }`}
+            className={`absolute right-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none ${layout === 'compact' ? 'text-sm' : 'text-base'
+              }`}
           />
         </div>
       </div>
       <div className="vscode-scrollbar flex-1 overflow-auto px-4 text-left normal-case text-xs text-on-surface">
         {results.length === 0 && <p className="px-2 py-4 text-on-surface-variant">Type to search across projects, experience, and skills.</p>}
         {results.map((group: SearchGroup) => (
-            <div key={group.fileId} className="mb-4">
-              <div className="mb-1 text-[10px] uppercase tracking-[0.4em] text-secondary/70">{group.fileName}</div>
-              <div className="space-y-1">
-                {group.matches.map((match: SearchMatch) => (
+          <div key={group.fileId} className="mb-4">
+            <div className="mb-1 text-[10px] uppercase tracking-[0.4em] text-secondary/70">{group.fileName}</div>
+            <div className="space-y-1">
+              {group.matches.map((match: SearchMatch) => (
                 <button
                   key={match.id}
                   onClick={() => {
