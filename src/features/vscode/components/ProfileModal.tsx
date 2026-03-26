@@ -26,7 +26,7 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
     <Modal isOpen={isOpen} onClose={onClose} title="Profile" icon="account_circle">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent/70 text-2xl font-bold text-on-accent">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent/70 text-2xl font-bold text-on-accent shadow-lg shadow-accent/20 ring-2 ring-accent/10">
             AN
           </div>
           <div>
@@ -55,7 +55,7 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
             {stats.map((stat) => (
               <div
                 key={stat.label}
-                className="flex items-center gap-2 rounded border border-outline-variant bg-surface-container-lowest p-3"
+                className="group flex items-center gap-3 rounded-lg border border-outline-variant/60 bg-surface-container-lowest p-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:bg-surface-container-low hover:shadow-md hover:shadow-black/10"
               >
                 <Icon
                   name={stat.icon}
@@ -81,7 +81,7 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
                 href={social.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between rounded border border-outline-variant bg-surface-container-lowest p-3 transition-all hover:border-accent/40 hover:bg-surface-container"
+                className="group flex items-center justify-between rounded-lg border border-outline-variant/60 bg-surface-container-lowest p-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:bg-surface-container-low hover:shadow-md hover:shadow-black/10"
               >
                 <div className="flex items-center gap-2">
                   <Icon

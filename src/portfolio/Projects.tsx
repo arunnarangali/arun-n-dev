@@ -5,7 +5,7 @@ import { projects } from './content'
 export const ProjectsSection = () => {
   const { query } = useSearchHighlight()
   return (
-    <section id="projects" className="w-full space-y-6">
+    <section id="projects" className="mx-auto w-full max-w-7xl space-y-6">
       <header>
         <p className="text-xs uppercase tracking-[0.4em] text-on-surface-variant">Projects</p>
         <h2 className="text-3xl font-semibold text-on-surface">Selected Shipments</h2>

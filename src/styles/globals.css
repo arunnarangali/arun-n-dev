@@ -17,6 +17,7 @@
     --c-surface-variant: 53 53 53;
     --c-surface-tint: 159 202 255;
     --c-surface-container-lowest: 14 14 14;
+    --c-terminal-bg: 0 0 0;
 
     --c-on-surface: 229 226 225;
     --c-on-surface-variant: 192 199 211;
@@ -98,6 +99,7 @@
   --c-surface-variant: 232 235 239;
   --c-surface-tint: 0 120 212;
   --c-surface-container-lowest: 255 255 255;
+  --c-terminal-bg: 254 253 245;
 
   --c-on-surface: 22 26 31;
   --c-on-surface-variant: 55 65 81;
@@ -168,6 +170,7 @@
   --c-surface-variant: 0 0 0;
   --c-surface-tint: 0 255 0;
   --c-surface-container-lowest: 0 0 0;
+  --c-terminal-bg: 0 0 0;
 
   --c-on-surface: 255 255 255;
   --c-on-surface-variant: 255 255 255;

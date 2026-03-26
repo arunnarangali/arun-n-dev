@@ -43,11 +43,10 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
-                className={`flex flex-col items-center gap-1 rounded border transition-all ${
-                  theme === t.id
-                    ? 'border-accent/60 bg-accent/10'
-                    : 'border-outline-variant bg-surface-container-lowest hover:border-accent/40'
-                } ${layout === 'compact' ? 'p-1.5' : 'p-2'}`}
+                className={`group flex flex-col items-center gap-1 rounded-lg border transition-all duration-300 hover:-translate-y-0.5 hover:shadow hover:shadow-black/10 ${theme === t.id
+                  ? 'border-accent/60 bg-accent/10 ring-1 ring-accent/20'
+                  : 'border-outline-variant/60 bg-surface-container-lowest hover:border-accent/40'
+                  } ${layout === 'compact' ? 'p-1.5' : 'p-2'}`}
               >
                 <Icon name={t.icon} className="text-lg text-on-surface" />
                 <span className={layout === 'compact' ? 'text-[9px]' : 'text-[10px]'} text-on-surface>{t.label}</span>
@@ -64,11 +63,10 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
               <button
                 key={l.id}
                 onClick={() => setLayout(l.id)}
-                className={`flex w-full items-center justify-between rounded border p-2 text-left transition-all ${
-                  layout === l.id
-                    ? 'border-accent/60 bg-accent/10'
-                    : 'border-outline-variant bg-surface-container-lowest hover:border-accent/40'
-                }`}
+                className={`group flex w-full items-center justify-between rounded-lg border p-2 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow hover:shadow-black/10 ${layout === l.id
+                  ? 'border-accent/60 bg-accent/10 ring-1 ring-accent/20'
+                  : 'border-outline-variant/60 bg-surface-container-lowest hover:border-accent/40 hover:bg-surface-container-low'
+                  }`}
               >
                 <div>
                   <span className="text-[11px] text-on-surface">{l.label}</span>
@@ -85,7 +83,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
 
         <section>
           <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Resume</h3>
-          <button className="flex w-full items-center justify-center gap-2 rounded bg-primary-container px-3 py-2 text-[11px] font-medium text-on-primary transition-colors hover:bg-primary">
+          <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-container px-3 py-2 text-[11px] font-medium text-on-primary transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary hover:shadow-md hover:shadow-primary/20">
             <Icon name="download" className="text-[14px]" />
             Download Resume (PDF)
           </button>
