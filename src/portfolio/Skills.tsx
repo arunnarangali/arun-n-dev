@@ -5,7 +5,7 @@ import { skillGroups } from './content'
 export const SkillsSection = () => {
   const { query } = useSearchHighlight()
   return (
-    <section className="space-y-6 rounded-2xl border border-outline-variant bg-surface-container-low p-8 text-on-surface">
+    <section className="mx-auto w-full max-w-7xl space-y-6 rounded-2xl border border-outline-variant bg-surface-container-low p-8 text-on-surface">
       <header>
         <p className="text-xs uppercase tracking-[0.4em] text-on-surface-variant">Skills</p>
         <h2 className="text-3xl font-semibold">Systems thinking paired with pragmatic delivery</h2>

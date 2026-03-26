@@ -5,7 +5,7 @@ import { experiences } from './content'
 export const ExperienceSection = () => {
   const { query } = useSearchHighlight()
   return (
-    <section className="rounded-2xl border border-outline-variant bg-surface-container-low p-8 text-on-surface">
+    <section className="mx-auto w-full max-w-7xl rounded-2xl border border-outline-variant bg-surface-container-low p-8 text-on-surface">
       <header className="mb-6">
         <p className="text-xs uppercase tracking-[0.4em] text-on-surface-variant">Experience</p>
         <h2 className="text-3xl font-semibold">Partnering with product & platform teams</h2>

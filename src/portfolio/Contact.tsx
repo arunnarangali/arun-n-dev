@@ -2,7 +2,7 @@ import { socials } from './content'
 
 export const ContactSection = () => {
   return (
-    <section id="contact" className="grid gap-6 rounded-2xl border border-outline-variant bg-surface-container-low p-8 text-on-surface lg:grid-cols-2">
+    <section id="contact" className="mx-auto grid w-full max-w-7xl gap-6 rounded-2xl border border-outline-variant bg-surface-container-low p-8 text-on-surface lg:grid-cols-2">
       <div className="space-y-4">
         <p className="text-xs uppercase tracking-[0.4em] text-on-surface-variant">Contact</p>
         <h2 className="text-3xl font-semibold">Let’s architect your next product sprint</h2>

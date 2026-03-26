@@ -11,6 +11,7 @@ import { MacTitleBar } from '../../features/vscode/components/MacTitleBar'
 import { ProfileModal } from '../../features/vscode/components/ProfileModal'
 import { SettingsModal } from '../../features/vscode/components/SettingsModal'
 import { StatusBar } from '../../features/vscode/components/StatusBar'
+import { LoaderScreen } from '../../features/vscode/components/LoaderScreen'
 import { TerminalPanel } from '../../features/vscode/components/panels/TerminalPanel'
 import links from '../../portfolio/data/links.json'
 import { useResizablePanel } from '../../features/vscode/hooks/useResizablePanel'
@@ -26,7 +27,8 @@ export const VSCodePortfolio = () => {
   const settings = useSettings()
   const [isProfileOpen, setProfileOpen] = useState(false)
   const [isSettingsOpen, setSettingsOpen] = useState(false)
-  const [isTerminalOpen, setTerminalOpen] = useState(false)
+  const [isLoaderOpen, setLoaderOpen] = useState(false)
+  const [isTerminalOpen, setTerminalOpen] = useState(true)
   const editorGroups = useEditorGroups()
   const {
     setActiveTabForGroup,
@@ -100,6 +102,14 @@ export const VSCodePortfolio = () => {
     },
     [addToOpenTabs, setActiveTabForGroup, setActiveGroup],
   )
+
+  const handleOpenModalWithLoader = useCallback((openSetter: (open: boolean) => void) => {
+    setLoaderOpen(true)
+    setTimeout(() => {
+      setLoaderOpen(false)
+      openSetter(true)
+    }, 600)
+  }, [])
 
   const handleSelectTab = useCallback(
     (groupId: EditorGroupId, id: string) => {
@@ -248,8 +258,8 @@ export const VSCodePortfolio = () => {
           activeView={workbench.activeView}
           onToggleExplorer={workbench.toggleExplorer}
           onSelectView={workbench.openView}
-          onOpenProfile={() => setProfileOpen(true)}
-          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenProfile={() => handleOpenModalWithLoader(setProfileOpen)}
+          onOpenSettings={() => handleOpenModalWithLoader(setSettingsOpen)}
         />
         <div className="hidden md:flex">
           {workbench.isLeftPanelOpen && (
@@ -287,7 +297,7 @@ export const VSCodePortfolio = () => {
                 const canGroupToggle = file?.kind === 'tsx'
                 return (
                   <Fragment key={`editor-group-${groupId}`}>
-                    <div className="flex min-w-0 flex-col" style={{ width: `${groupWidths[index]}px` }}>
+                    <div className="flex h-full min-h-0 min-w-0 flex-col" style={{ width: `${groupWidths[index]}px` }}>
                       <EditorGroup
                         tabs={groupTabs}
                         activeTabId={file?.id}
@@ -342,6 +352,7 @@ export const VSCodePortfolio = () => {
       )}
       <StatusBar />
       <CommandPalette open={isCommandPaletteOpen} onClose={closeCommandPalette} />
+      {isLoaderOpen && <LoaderScreen />}
       <ProfileModal isOpen={isProfileOpen} onClose={() => setProfileOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
       <FloatingContact />

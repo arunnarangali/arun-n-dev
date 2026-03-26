@@ -48,10 +48,10 @@ const formatIntroLines = (): TerminalLine[] => {
     { id: createId(), content: aboutContent.role, variant: 'meta' },
     topExperience
       ? {
-          id: createId(),
-          content: `${topExperience.title} @ ${topExperience.company} · ${systemsMetric}+ launches`,
-          variant: 'meta',
-        }
+        id: createId(),
+        content: `${topExperience.title} @ ${topExperience.company} · ${systemsMetric}+ launches`,
+        variant: 'meta',
+      }
       : { id: createId(), content: `${systemsMetric}+ systems delivered across DX platforms`, variant: 'meta' },
     highlights ? { id: createId(), content: highlights, variant: 'meta' } : null,
     { id: createId(), content: '...is now installed!', variant: 'system' },
@@ -69,8 +69,6 @@ export const TerminalPanel = ({
   onClose,
   files,
   onOpenFile,
-  theme,
-  layout,
   setTheme,
   setLayout,
   links,
@@ -106,7 +104,7 @@ export const TerminalPanel = ({
   const terminalResize = useResizablePanel({
     axis: 'y',
     storageKey: 'vscode-terminal-height',
-    defaultSize: Math.round((typeof window !== 'undefined' ? window.innerHeight : 800) * 0.35),
+    defaultSize: Math.round((typeof window !== 'undefined' ? window.innerHeight : 800) * 0.22),
     min: MIN_TERMINAL_HEIGHT,
     getMax: ({ height }) => height * 0.8,
     enabled: !isMobile,
@@ -132,7 +130,13 @@ export const TerminalPanel = ({
 
   useEffect(() => {
     if (!scrollRef.current) return
-    scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    // If it's just the initial banner or the terminal was cleared, scroll to top.
+    // Otherwise, follow the latest commands at the bottom.
+    if (lines.length <= 6) {
+      scrollRef.current.scrollTop = 0
+    } else {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
   }, [lines])
 
   const appendLine = useCallback((content: string, variant: TerminalLine['variant']) => {
@@ -342,7 +346,7 @@ export const TerminalPanel = ({
           appendLine(`Command not found: ${base}`, 'output')
       }
     },
-    [appendLine, appendLines, clearTerminal, copyToClipboard, layout, layoutOptions, links.github, links.linkedin, links.repo, onOpenFile, openFile, openLink, portfolioUrl, setLayout, setTheme, themeOptions],
+    [appendLine, appendLines, clearTerminal, copyToClipboard, layoutOptions, links.github, links.linkedin, links.repo, onOpenFile, openFile, openLink, portfolioUrl, setLayout, setTheme, themeOptions],
   )
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -387,24 +391,22 @@ export const TerminalPanel = ({
 
   const effectiveHeight = open
     ? isMobile
-      ? clampValue(Math.round(viewport.height * 0.65), MIN_TERMINAL_HEIGHT, viewport.height - 100)
+      ? clampValue(Math.round(viewport.height * 0.35), MIN_TERMINAL_HEIGHT, viewport.height - 100)
       : terminalResize.size
     : 0
 
   return (
     <div
-      className={`group/terminal flex flex-col overflow-hidden border-t border-outline-variant bg-surface-container-low transition-[height] duration-200 ease-out ${
-        open ? 'pointer-events-auto' : 'pointer-events-none'
-      }`}
+      className={`group/terminal flex flex-col overflow-hidden border-t border-outline-variant bg-surface-container-low transition-[height] duration-200 ease-out ${open ? 'pointer-events-auto' : 'pointer-events-none'
+        }`}
       style={{ height: open ? `${effectiveHeight}px` : '0px' }}
       aria-hidden={!open}
     >
       {!isMobile && (
         <div className="relative hidden h-3 md:block">
           <div
-            className={`absolute left-1/2 top-1/2 h-1 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-outline/40 transition-opacity ${
-              terminalResize.isResizing ? 'opacity-100' : 'opacity-0 group-hover/terminal:opacity-100'
-            }`}
+            className={`absolute left-1/2 top-1/2 h-1 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-outline/40 transition-opacity ${terminalResize.isResizing ? 'opacity-100' : 'opacity-0 group-hover/terminal:opacity-100'
+              }`}
             {...terminalResize.getHandleProps()}
           />
         </div>
@@ -419,7 +421,7 @@ export const TerminalPanel = ({
           <Icon name="close" className="text-sm" />
         </button>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col bg-[rgb(var(--c-terminal-bg))]">
         <div ref={scrollRef} className="vscode-scrollbar flex-1 overflow-auto px-4 py-3 font-mono text-xs text-on-surface">
           {lines.length === 0 && <p className="text-secondary/70">Session cleared. Type `help` to continue.</p>}
           {lines.map((line) => {
@@ -427,9 +429,8 @@ export const TerminalPanel = ({
               return (
                 <p
                   key={line.id}
-                  className={`whitespace-pre-wrap text-accent ${
-                    isMobile ? 'text-2xl font-semibold leading-tight' : 'text-[20px] leading-[1.05] tracking-tight md:text-[32px]'
-                  }`}
+                  className={`text-accent ${isMobile ? 'whitespace-normal text-2xl font-semibold leading-tight' : 'whitespace-pre text-[14px] leading-[1.15] tracking-tight md:text-[16px] lg:text-[20px]'
+                    }`}
                 >
                   {isMobile ? 'Arun N' : line.content}
                 </p>
@@ -445,13 +446,12 @@ export const TerminalPanel = ({
             return (
               <p
                 key={line.id}
-                className={`whitespace-pre-wrap ${
-                  line.variant === 'input'
-                    ? 'text-accent'
-                    : line.variant === 'system'
-                      ? 'text-secondary/70'
-                      : 'text-on-surface'
-                }`}
+                className={`whitespace-pre-wrap ${line.variant === 'input'
+                  ? 'text-accent'
+                  : line.variant === 'system'
+                    ? 'text-secondary/70'
+                    : 'text-on-surface'
+                  }`}
               >
                 {line.variant === 'input' ? `${promptLabel} ~ % ${line.content}` : line.content}
               </p>
@@ -466,7 +466,7 @@ export const TerminalPanel = ({
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={handleKeyDown}
             className="flex-1 bg-transparent text-sm text-on-surface placeholder:text-secondary/50 focus:outline-none"
-            placeholder={`Active theme: ${theme} · layout: ${layout}`}
+            placeholder="Hi Arun, start out to code..."
             autoComplete="off"
           />
         </form>

@@ -3,7 +3,7 @@ import { aboutContent } from './content'
 
 export const AboutSection = () => {
   return (
-    <section className="grid w-full gap-8 rounded-2xl border border-outline-variant bg-surface-container-low p-6 text-on-surface md:grid-cols-[260px,1fr] md:p-8">
+    <section className="mx-auto grid w-full max-w-7xl gap-8 rounded-2xl border border-outline-variant bg-surface-container-low p-6 text-on-surface md:grid-cols-[260px,1fr] md:p-8">
       <div className="space-y-4 text-center">
         <div className="mx-auto h-40 w-40 overflow-hidden rounded-full border border-outline-variant">
           <img src={profileImg} alt="Arun Narangali" className="h-full w-full object-cover" />
