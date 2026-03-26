@@ -18,7 +18,7 @@ export const ExtensionsPanel = ({ variant = 'sidebar' }: ExtensionsPanelProps) =
   return (
     <aside
       className={`flex flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider ${
-        variant === 'overlay' ? 'h-full w-full' : 'w-64'
+        variant === 'overlay' ? 'h-full w-full' : 'w-full'
       }`}
     >
       <div className="px-4 py-3 text-on-surface">
