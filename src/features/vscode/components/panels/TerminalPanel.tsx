@@ -15,6 +15,7 @@ type TerminalPanelProps = {
   setTheme: (theme: Theme) => void
   setLayout: (layout: Layout) => void
   links: Record<string, string | undefined>
+  focusSignal?: number
 }
 
 type TerminalLine = {
@@ -72,6 +73,7 @@ export const TerminalPanel = ({
   setTheme,
   setLayout,
   links,
+  focusSignal,
 }: TerminalPanelProps) => {
   const [lines, setLines] = useState<TerminalLine[]>(() => formatIntroLines())
   const [input, setInput] = useState('')
@@ -116,6 +118,11 @@ export const TerminalPanel = ({
       inputRef.current?.focus()
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    inputRef.current?.focus()
+  }, [focusSignal, open])
 
   useEffect(() => {
     if (!open) return

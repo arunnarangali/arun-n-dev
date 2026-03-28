@@ -46,10 +46,23 @@ Browse through the sections to understand my skills, projects, and the outcomes 
 
 ## ⚡ Actions & Shortcuts
 
-- **Command Palette**: `Cmd/Ctrl+Shift+P` (close with `Esc`)
+- **Command Palette**: `Cmd/Ctrl+Shift+P`, filter commands, navigate with ↑/↓, run with Enter
+- **Close Palette**: `Esc`
+- **Quick Shortcuts**: `Cmd+Shift+F` (Find), `Cmd+K Cmd+T` (Theme), `Ctrl+`` (Terminal), `Cmd+B` (Toggle Sidebar), `Shift+Alt+F` (Format)
 - **Preview ↔ Code**: toggle from the top bar or editor group
 - **Split Editor**: desktop-only split from the top bar
 - **Search**: Activity Bar → Search icon
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+- **Command Palette**: `Cmd/Ctrl+Shift+P`
+- **Find in Files**: `Cmd/Ctrl+Shift+F`
+- **Open Theme**: `Cmd/Ctrl+K` then `Cmd/Ctrl+T`
+- **Focus Terminal**: `Ctrl+``
+- **Toggle Sidebar**: `Cmd/Ctrl+B`
+- **Format Document**: `Shift+Alt+F`
 
 ---
 

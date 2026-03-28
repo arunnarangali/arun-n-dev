@@ -35,6 +35,7 @@ export const useWorkbench = () => {
   }
 
   const closePanel = () => setLeftPanelOpen(false)
+  const toggleLeftPanel = () => setLeftPanelOpen((open) => !open)
 
   return {
     activeView,
@@ -42,5 +43,6 @@ export const useWorkbench = () => {
     openView: toggleView,
     toggleExplorer: () => toggleView('explorer'),
     closePanel,
+    toggleLeftPanel,
   }
 }
