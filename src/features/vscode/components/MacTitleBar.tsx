@@ -102,7 +102,7 @@ export const MacTitleBar = ({
   }
 
   const handleDownloadResume = () => {
-    openExternal('/resume.pdf')
+    openExternal('/ArunCV.pdf')
   }
 
   const handleShare = async () => {
@@ -176,7 +176,7 @@ export const MacTitleBar = ({
           <span className="h-3 w-3 rounded-full bg-[#FFBD2E]" />
           <span className="h-3 w-3 rounded-full bg-[#27C93F]" />
         </div>
-        <span className="font-headline text-xs tracking-tight text-on-surface/80">portfolio — Visual Studio Code</span>
+        <span className="font-headline text-xs tracking-tight text-on-surface/80">portfolio — Arun N</span>
       </div>
       <div className="flex items-center gap-2 text-primary/80">
         <button

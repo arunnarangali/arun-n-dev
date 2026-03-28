@@ -65,7 +65,7 @@
     --c-on-accent: 0 0 0;
 
     --accent-primary: rgb(var(--c-primary-container));
-    --scrollbar-thumb: rgba(255, 255, 255, 0.25);
+    --scrollbar-thumb: rgb(var(--c-primary) / 0.3);
     --caret-color: rgb(var(--c-on-surface));
     --syntax-key: rgb(var(--c-primary));
     --syntax-string: #ce9178;
@@ -147,7 +147,7 @@
   --c-on-accent: 0 0 0;
 
   --accent-primary: rgb(var(--c-primary-container));
-  --scrollbar-thumb: rgba(2, 6, 23, 0.25);
+  --scrollbar-thumb: rgb(var(--c-primary) / 0.3);
   --caret-color: rgb(var(--c-on-surface));
   --syntax-key: rgb(var(--c-primary));
   --syntax-string: #9a5a3d;
@@ -218,7 +218,7 @@
   --c-on-accent: 0 0 0;
 
   --accent-primary: rgb(var(--c-primary-container));
-  --scrollbar-thumb: rgba(255, 255, 255, 0.55);
+  --scrollbar-thumb: rgb(var(--c-primary) / 0.6);
   --caret-color: rgb(var(--c-on-surface));
   --syntax-key: rgb(var(--c-primary));
   --syntax-string: rgb(var(--c-tertiary));

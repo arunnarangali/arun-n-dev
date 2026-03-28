@@ -1,4 +1,4 @@
-import { useSearchHighlight } from '../features/vscode/state/SearchContext'
+import { useSearchHighlight } from '../features/vscode/state/useSearchHighlight'
 import { highlightText } from '../features/vscode/utils/highlight'
 import { experiences } from './content'
 

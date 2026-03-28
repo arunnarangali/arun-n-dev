@@ -13,7 +13,7 @@ export const EditorTabs = ({ tabs, activeId, onSelect, onClose }: EditorTabsProp
   const { layout } = useSettings()
   return (
     <div className={[
-      'flex w-full min-w-0 overflow-x-auto bg-surface-container-low',
+      'vscode-scrollbar flex w-full min-w-0 overflow-x-auto bg-surface-container-low',
       layout === 'compact' ? 'h-8' : 'h-9',
     ].join(' ')}>
       {tabs.map((tab) => {

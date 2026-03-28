@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getFileById, portfolioFiles, type PortfolioFile } from '../../features/vscode/data/files'
 import { useWorkspace } from '../../features/vscode/state/useWorkspace'
 import { useWorkbench } from '../../features/vscode/state/useWorkbench'
@@ -17,6 +17,10 @@ import links from '../../portfolio/data/links.json'
 import { useResizablePanel } from '../../features/vscode/hooks/useResizablePanel'
 import { useEditorGroups, type EditorGroupId } from '../../features/vscode/state/useEditorGroups'
 import { EditorGroup } from '../../features/vscode/components/EditorGroup'
+import { EditorTabs } from '../../features/vscode/components/EditorTabs'
+import { Breadcrumbs } from '../../features/vscode/components/Breadcrumbs'
+import { SinglePageEditor, type SinglePageEditorHandle } from '../../features/vscode/components/SinglePageEditor'
+import { AuxEditorOverlay } from '../../features/vscode/components/AuxEditorOverlay'
 import { useElementSize } from '../../features/vscode/hooks/useElementSize'
 
 const SIDEBAR_DEFAULT_WIDTH = 240
@@ -28,9 +32,13 @@ export const VSCodePortfolio = () => {
   const [isProfileOpen, setProfileOpen] = useState(false)
   const [isSettingsOpen, setSettingsOpen] = useState(false)
   const [isLoaderOpen, setLoaderOpen] = useState(false)
-  const [isTerminalOpen, setTerminalOpen] = useState(true)
+  const [isTerminalOpen, setTerminalOpen] = useState(() => !settings.singlePage)
   const [terminalFocusSignal, setTerminalFocusSignal] = useState(0)
   const [commandFeedback, setCommandFeedback] = useState('')
+  const [auxTabs, setAuxTabs] = useState<string[]>([])
+  const [auxActiveId, setAuxActiveId] = useState('')
+  const [auxMode, setAuxMode] = useState<'preview' | 'code'>('preview')
+  const [isAuxOpen, setAuxOpen] = useState(false)
   const editorGroups = useEditorGroups()
   const {
     setActiveTabForGroup,
@@ -51,12 +59,27 @@ export const VSCodePortfolio = () => {
     closeCommandPalette,
   } = useWorkspace()
   const [isDesktop, setIsDesktop] = useState(() => (typeof window === 'undefined' ? true : window.innerWidth >= 768))
+  const singlePageEditorRef = useRef<SinglePageEditorHandle>(null)
+  const tsxFiles = useMemo(() => portfolioFiles.filter((file) => file.kind === 'tsx'), [])
   const fallbackFileId = useMemo(() => openFiles[0]?.id ?? portfolioFiles[0]?.id ?? '', [openFiles])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     const desktopQuery = window.matchMedia('(min-width: 768px)')
-    const updateDesktop = (event?: MediaQueryListEvent) => setIsDesktop(event ? event.matches : desktopQuery.matches)
+    const updateDesktop = (event?: MediaQueryListEvent) => {
+      const matches = event ? event.matches : desktopQuery.matches
+      if (!matches && settings.singlePage && editorGroups.groupCount > 1) {
+        const rightTabs = editorGroups.tabsByGroup[1] ?? []
+        if (rightTabs.length) {
+          setAuxTabs(rightTabs)
+          setAuxActiveId(editorGroups.activeTabByGroup[1] ?? rightTabs[0])
+          setAuxMode(editorGroups.modeByGroup[1] ?? 'preview')
+          setAuxOpen(true)
+        }
+        setExactGroupCount(1, 0, fallbackFileId)
+      }
+      setIsDesktop(matches)
+    }
     updateDesktop()
     if (desktopQuery.addEventListener) {
       desktopQuery.addEventListener('change', updateDesktop)
@@ -64,22 +87,15 @@ export const VSCodePortfolio = () => {
     }
     desktopQuery.addListener(updateDesktop)
     return () => desktopQuery.removeListener(updateDesktop)
-  }, [])
-
-  useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase()
-      if ((event.metaKey || event.ctrlKey) && event.shiftKey && key === 'p') {
-        event.preventDefault()
-        toggleCommandPalette()
-      }
-      if (key === 'escape') {
-        closeCommandPalette()
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [toggleCommandPalette, closeCommandPalette])
+  }, [
+    editorGroups.activeTabByGroup,
+    editorGroups.groupCount,
+    editorGroups.modeByGroup,
+    editorGroups.tabsByGroup,
+    fallbackFileId,
+    setExactGroupCount,
+    settings.singlePage,
+  ])
 
   useEffect(() => {
     if (!isDesktop && editorGroups.groupCount > 1) {
@@ -87,6 +103,20 @@ export const VSCodePortfolio = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDesktop, fallbackFileId, setExactGroupCount])
+
+  useEffect(() => {
+    if (!settings.singlePage) return
+    if (editorGroups.groupCount > 1 && (editorGroups.tabsByGroup[1] ?? []).length === 0) {
+      setExactGroupCount(1, 0, fallbackFileId)
+    }
+    setActiveGroup(0)
+  }, [editorGroups.groupCount, editorGroups.tabsByGroup, fallbackFileId, setActiveGroup, setExactGroupCount, settings.singlePage])
+
+  useEffect(() => {
+    if (settings.singlePage) {
+      setTerminalOpen(false)
+    }
+  }, [settings.singlePage])
 
   useEffect(() => {
     if (!fallbackFileId) return
@@ -104,11 +134,41 @@ export const VSCodePortfolio = () => {
 
   const handleOpenFile = useCallback(
     (id: string, targetGroup: EditorGroupId = editorGroups.activeGroup) => {
+      const file = getFileById(id)
+      if (settings.singlePage && file?.kind !== 'tsx') {
+        addToOpenTabs(id)
+        if (!isDesktop) {
+          setAuxTabs((current) => (current.includes(id) ? current : [...current, id]))
+          setAuxActiveId(id)
+          setAuxMode('preview')
+          setAuxOpen(true)
+          return
+        }
+        if (editorGroups.groupCount === 1) {
+          setExactGroupCount(2, 1)
+        }
+        setActiveTabForGroup(1, id)
+        setActiveGroup(1)
+        return
+      }
+      const groupId = settings.singlePage ? 0 : targetGroup
       addToOpenTabs(id)
-      setActiveTabForGroup(targetGroup, id)
-      setActiveGroup(targetGroup)
+      setActiveTabForGroup(groupId, id)
+      setActiveGroup(groupId)
+      if (settings.singlePage && file?.kind === 'tsx') {
+        singlePageEditorRef.current?.scrollToSection(id)
+      }
     },
-    [addToOpenTabs, setActiveTabForGroup, setActiveGroup],
+    [
+      addToOpenTabs,
+      editorGroups.activeGroup,
+      editorGroups.groupCount,
+      isDesktop,
+      setActiveGroup,
+      setActiveTabForGroup,
+      setExactGroupCount,
+      settings.singlePage,
+    ],
   )
 
   const handleOpenModalWithLoader = useCallback((openSetter: (open: boolean) => void) => {
@@ -121,10 +181,37 @@ export const VSCodePortfolio = () => {
 
   const handleSelectTab = useCallback(
     (groupId: EditorGroupId, id: string) => {
-      setActiveTabForGroup(groupId, id)
-      setActiveGroup(groupId)
+      const file = getFileById(id)
+      if (settings.singlePage && file?.kind !== 'tsx') {
+        if (!isDesktop) {
+          setAuxTabs((current) => (current.includes(id) ? current : [...current, id]))
+          setAuxActiveId(id)
+          setAuxMode('preview')
+          setAuxOpen(true)
+          return
+        }
+        if (editorGroups.groupCount === 1) {
+          setExactGroupCount(2, 1)
+        }
+        setActiveTabForGroup(1, id)
+        setActiveGroup(1)
+        return
+      }
+      const targetGroup = settings.singlePage ? 0 : groupId
+      setActiveTabForGroup(targetGroup, id)
+      setActiveGroup(targetGroup)
+      if (settings.singlePage && file?.kind === 'tsx') {
+        singlePageEditorRef.current?.scrollToSection(id)
+      }
     },
-    [setActiveTabForGroup, setActiveGroup],
+    [
+      editorGroups.groupCount,
+      isDesktop,
+      setActiveGroup,
+      setActiveTabForGroup,
+      setExactGroupCount,
+      settings.singlePage,
+    ],
   )
 
   const focusGroup = useCallback(
@@ -162,14 +249,103 @@ export const VSCodePortfolio = () => {
   const currentGroupId = editorGroups.activeGroup
   const currentFileId = editorGroups.activeTabByGroup[currentGroupId]
   const currentFile = useMemo(() => getFileById(currentFileId) ?? openFiles[0], [currentFileId, openFiles])
+  const groupZeroFileId = editorGroups.activeTabByGroup[0]
+  const groupZeroFile = useMemo(() => getFileById(groupZeroFileId) ?? openFiles[0], [groupZeroFileId, openFiles])
   const currentMode = editorGroups.modeByGroup[currentGroupId] ?? 'preview'
   const isReadmeMarkdown = (file?: PortfolioFile) => file?.kind === 'markdown' && file?.id === 'portfolio/README.md'
-  const canTogglePreview = currentFile?.kind === 'tsx' || isReadmeMarkdown(currentFile)
+  const showSinglePageScrollView = settings.singlePage
+  const canTogglePreview = !(settings.singlePage && editorGroups.activeGroup === 0) &&
+    (currentFile?.kind === 'tsx' || isReadmeMarkdown(currentFile))
+  const auxFiles = useMemo(
+    () => auxTabs.map((tabId) => getFileById(tabId)).filter((file): file is NonNullable<typeof file> => Boolean(file)),
+    [auxTabs],
+  )
+  const auxActiveFile = useMemo(() => getFileById(auxActiveId), [auxActiveId])
+  const canToggleAuxPreview = auxActiveFile?.kind === 'tsx' || isReadmeMarkdown(auxActiveFile)
 
   const handleToggleCurrentMode = () => {
     if (!canTogglePreview) return
     toggleGroupMode(currentGroupId)
   }
+
+  const handleSectionActive = useCallback(
+    (id: string) => {
+      if (!settings.singlePage) return
+      addToOpenTabs(id)
+      setActiveTabForGroup(0, id)
+      setActiveGroup(0)
+    },
+    [addToOpenTabs, setActiveGroup, setActiveTabForGroup, settings.singlePage],
+  )
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase()
+      const isCmdOrCtrl = event.metaKey || event.ctrlKey
+      const isShiftAlt = event.shiftKey && event.altKey
+
+      if (isCmdOrCtrl && event.shiftKey && key === 'p') {
+        event.preventDefault()
+        toggleCommandPalette()
+        return
+      }
+
+      if (key === 'escape') {
+        closeCommandPalette()
+        return
+      }
+
+      if (isCmdOrCtrl && event.code === 'Backquote' && !event.shiftKey && !event.altKey) {
+        event.preventDefault()
+        setTerminalOpen(true)
+        setTerminalFocusSignal((signal) => signal + 1)
+        return
+      }
+
+      if (isCmdOrCtrl && isShiftAlt) {
+        if (key === 'f') {
+          event.preventDefault()
+          workbench.openView('search')
+          return
+        }
+        if (key === 't') {
+          event.preventDefault()
+          setLoaderOpen(true)
+          setTimeout(() => {
+            setLoaderOpen(false)
+            setSettingsOpen(true)
+          }, 600)
+          return
+        }
+        if (key === 'b') {
+          event.preventDefault()
+          workbench.toggleLeftPanel()
+          return
+        }
+        if (key === 'l') {
+          event.preventDefault()
+          if (currentFile && currentMode === 'code') {
+            setCommandFeedback('Document formatted.')
+          } else {
+            setCommandFeedback('Format works in code view only.')
+          }
+        }
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [
+    closeCommandPalette,
+    currentFile,
+    currentMode,
+    setCommandFeedback,
+    setLoaderOpen,
+    setSettingsOpen,
+    setTerminalFocusSignal,
+    setTerminalOpen,
+    toggleCommandPalette,
+    workbench,
+  ])
 
   const pushCommandFeedback = useCallback((message: string) => {
     setCommandFeedback(message)
@@ -285,18 +461,18 @@ export const VSCodePortfolio = () => {
 
   return (
     <div className={`flex h-full min-h-0 w-full flex-col overflow-hidden bg-surface pb-6 theme-${settings.theme} layout-${settings.layout}`}>
-      <MacTitleBar
-        isTerminalOpen={isTerminalOpen}
-        onToggleTerminal={() => setTerminalOpen((current) => !current)}
-        editorMode={currentMode}
-        onToggleEditorMode={handleToggleCurrentMode}
-        canTogglePreview={Boolean(canTogglePreview)}
-        splitToggle={{
-          visible: isDesktop,
-          isSplit: editorGroups.groupCount === 2,
-          onToggle: handlePrimarySplitToggle,
-        }}
-      />
+        <MacTitleBar
+          isTerminalOpen={isTerminalOpen}
+          onToggleTerminal={() => setTerminalOpen((current) => !current)}
+          editorMode={currentMode}
+          onToggleEditorMode={handleToggleCurrentMode}
+          canTogglePreview={Boolean(canTogglePreview)}
+          splitToggle={{
+            visible: isDesktop && !settings.singlePage,
+            isSplit: editorGroups.groupCount === 2,
+            onToggle: handlePrimarySplitToggle,
+          }}
+        />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <ActivityBar
           activeView={workbench.activeView}
@@ -330,39 +506,96 @@ export const VSCodePortfolio = () => {
         <main className="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden">
           <div className="flex-1 min-h-0" ref={setEditorAreaElement}>
             <div className="group/editor flex h-full min-h-0 overflow-hidden">
-              {visibleGroups.map((groupId, index) => {
-                const fileId = editorGroups.activeTabByGroup[groupId]
-                const groupTabIds = editorGroups.tabsByGroup[groupId]
-                const groupTabs = groupTabIds
-                  .map((tabId) => getFileById(tabId))
-                  .filter((f): f is NonNullable<typeof f> => Boolean(f))
-                const file = groupTabs.find((tab) => tab.id === fileId) ?? groupTabs[groupTabs.length - 1] ?? openFiles[0]
-                const mode = editorGroups.modeByGroup[groupId] ?? 'preview'
-                const canGroupToggle = file?.kind === 'tsx' || isReadmeMarkdown(file)
-                return (
-                  <Fragment key={`editor-group-${groupId}`}>
-                    <div className="flex h-full min-h-0 min-w-0 flex-col" style={{ width: `${groupWidths[index]}px` }}>
-                      <EditorGroup
-                        tabs={groupTabs}
-                        activeTabId={file?.id}
-                        onSelectTab={(id) => handleSelectTab(groupId, id)}
-                        onCloseTab={(id) => handleCloseTab(groupId, id)}
-                        file={file}
-                        mode={mode}
-                        canTogglePreview={Boolean(canGroupToggle)}
-                        onToggleMode={() => {
-                          if (canGroupToggle) {
-                            editorGroups.toggleGroupMode(groupId)
-                          }
-                        }}
-                        onFocus={() => focusGroup(groupId)}
-                        isFocused={editorGroups.activeGroup === groupId}
-                      />
+              {showSinglePageScrollView ? (
+                <>
+                  <div className="flex h-full min-h-0 min-w-0 flex-col" style={{ width: `${groupWidths[0] ?? availableWidth}px` }}>
+                    <EditorTabs
+                      tabs={(editorGroups.tabsByGroup[0] ?? [])
+                        .map((tabId) => getFileById(tabId))
+                        .filter((f): f is NonNullable<typeof f> => Boolean(f))}
+                      activeId={editorGroups.activeTabByGroup[0] ?? ''}
+                      onSelect={(id) => handleSelectTab(0, id)}
+                      onClose={(id) => handleCloseTab(0, id)}
+                    />
+                    <div className="flex items-center justify-between px-4 py-2">
+                      <Breadcrumbs path={groupZeroFile?.path} />
                     </div>
-                    {index < visibleGroups.length - 1 && renderSplitter()}
-                  </Fragment>
-                )
-              })}
+                    <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden">
+                      <SinglePageEditor ref={singlePageEditorRef} files={tsxFiles} onActiveSection={handleSectionActive} />
+                    </div>
+                  </div>
+                  {editorGroups.groupCount === 2 && (
+                    <>
+                      {renderSplitter()}
+                      {(() => {
+                        const groupId: EditorGroupId = 1
+                        const fileId = editorGroups.activeTabByGroup[groupId]
+                        const groupTabIds = editorGroups.tabsByGroup[groupId]
+                        const groupTabs = groupTabIds
+                          .map((tabId) => getFileById(tabId))
+                          .filter((f): f is NonNullable<typeof f> => Boolean(f))
+                        const file = groupTabs.find((tab) => tab.id === fileId) ?? groupTabs[groupTabs.length - 1] ?? openFiles[0]
+                        const mode = editorGroups.modeByGroup[groupId] ?? 'preview'
+                        const canGroupToggle = file?.kind === 'tsx' || isReadmeMarkdown(file)
+                        return (
+                          <div className="flex h-full min-h-0 min-w-0 flex-col" style={{ width: `${groupWidths[1] ?? MIN_EDITOR_PANE}px` }}>
+                            <EditorGroup
+                              tabs={groupTabs}
+                              activeTabId={file?.id}
+                              onSelectTab={(id) => handleSelectTab(groupId, id)}
+                              onCloseTab={(id) => handleCloseTab(groupId, id)}
+                              file={file}
+                              mode={mode}
+                              canTogglePreview={Boolean(canGroupToggle)}
+                              onToggleMode={() => {
+                                if (canGroupToggle) {
+                                  editorGroups.toggleGroupMode(groupId)
+                                }
+                              }}
+                              onFocus={() => focusGroup(groupId)}
+                              isFocused={editorGroups.activeGroup === groupId}
+                            />
+                          </div>
+                        )
+                      })()}
+                    </>
+                  )}
+                </>
+              ) : (
+                visibleGroups.map((groupId, index) => {
+                  const fileId = editorGroups.activeTabByGroup[groupId]
+                  const groupTabIds = editorGroups.tabsByGroup[groupId]
+                  const groupTabs = groupTabIds
+                    .map((tabId) => getFileById(tabId))
+                    .filter((f): f is NonNullable<typeof f> => Boolean(f))
+                  const file = groupTabs.find((tab) => tab.id === fileId) ?? groupTabs[groupTabs.length - 1] ?? openFiles[0]
+                  const mode = editorGroups.modeByGroup[groupId] ?? 'preview'
+                  const canGroupToggle = file?.kind === 'tsx' || isReadmeMarkdown(file)
+                  return (
+                    <Fragment key={`editor-group-${groupId}`}>
+                      <div className="flex h-full min-h-0 min-w-0 flex-col" style={{ width: `${groupWidths[index]}px` }}>
+                        <EditorGroup
+                          tabs={groupTabs}
+                          activeTabId={file?.id}
+                          onSelectTab={(id) => handleSelectTab(groupId, id)}
+                          onCloseTab={(id) => handleCloseTab(groupId, id)}
+                          file={file}
+                          mode={mode}
+                          canTogglePreview={Boolean(canGroupToggle)}
+                          onToggleMode={() => {
+                            if (canGroupToggle) {
+                              editorGroups.toggleGroupMode(groupId)
+                            }
+                          }}
+                          onFocus={() => focusGroup(groupId)}
+                          isFocused={editorGroups.activeGroup === groupId}
+                        />
+                      </div>
+                      {index < visibleGroups.length - 1 && renderSplitter()}
+                    </Fragment>
+                  )
+                })
+              )}
             </div>
           </div>
         <TerminalPanel
@@ -395,13 +628,48 @@ export const VSCodePortfolio = () => {
           </div>
         </div>
       )}
+      <AuxEditorOverlay
+        open={isAuxOpen && auxFiles.length > 0}
+        tabs={auxFiles}
+        activeId={auxActiveId}
+        mode={auxMode}
+        canTogglePreview={Boolean(canToggleAuxPreview)}
+        onSelectTab={(id) => setAuxActiveId(id)}
+        onCloseTab={(id) => {
+          setAuxTabs((current) => {
+            const next = current.filter((tabId) => tabId !== id)
+            if (next.length === 0) {
+              setAuxOpen(false)
+              setAuxActiveId('')
+              setAuxMode('preview')
+            } else if (auxActiveId === id) {
+              setAuxActiveId(next[next.length - 1])
+            }
+            const stillOpenInGroups = (editorGroups.tabsByGroup[0] ?? []).includes(id) ||
+              (editorGroups.tabsByGroup[1] ?? []).includes(id)
+            if (!stillOpenInGroups) {
+              closeFile(id)
+            }
+            return next
+          })
+        }}
+        onToggleMode={() => setAuxMode((mode) => (mode === 'preview' ? 'code' : 'preview'))}
+        onClose={() => {
+          setAuxOpen(false)
+          setAuxTabs([])
+          setAuxActiveId('')
+          setAuxMode('preview')
+        }}
+      />
       {commandFeedback && (
         <div className="fixed bottom-8 right-4 z-50 rounded-lg border border-outline-variant bg-surface-container-high px-3 py-2 text-xs text-on-surface shadow-lg">
           {commandFeedback}
         </div>
       )}
       <StatusBar />
-      <CommandPalette open={isCommandPaletteOpen} onClose={closeCommandPalette} onSelectCommand={handleCommandSelect} />
+      {isCommandPaletteOpen && (
+        <CommandPalette open={isCommandPaletteOpen} onClose={closeCommandPalette} onSelectCommand={handleCommandSelect} />
+      )}
       {isLoaderOpen && <LoaderScreen />}
       <ProfileModal isOpen={isProfileOpen} onClose={() => setProfileOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />

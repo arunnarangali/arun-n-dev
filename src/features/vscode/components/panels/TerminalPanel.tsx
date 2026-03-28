@@ -347,7 +347,7 @@ export const TerminalPanel = ({
           openLink(links.repo ?? links.github)
           break
         case 'resume':
-          openLink('/resume.pdf')
+          openLink('/ArunCV.pdf')
           break
         default:
           appendLine(`Command not found: ${base}`, 'output')

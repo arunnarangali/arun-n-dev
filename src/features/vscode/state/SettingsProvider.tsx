@@ -1,20 +1,10 @@
 import type { ReactNode } from 'react'
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-
-export type Theme = 'dark' | 'light' | 'highContrast'
-export type Layout = 'comfortable' | 'compact'
+import { useEffect, useMemo, useState } from 'react'
+import { SettingsContext, type Layout, type SettingsContextValue, type Theme } from './settingsContext'
 
 const THEME_STORAGE_KEY = 'vscode-theme'
 const LAYOUT_STORAGE_KEY = 'vscode-layout'
-
-type SettingsContextValue = {
-  theme: Theme
-  setTheme: (value: Theme) => void
-  layout: Layout
-  setLayout: (value: Layout) => void
-}
-
-const SettingsContext = createContext<SettingsContextValue | undefined>(undefined)
+const SINGLE_PAGE_STORAGE_KEY = 'vscode-single-page'
 
 const isTheme = (value: string | null): value is Theme =>
   value === 'dark' || value === 'light' || value === 'highContrast'
@@ -33,6 +23,14 @@ const readStoredLayout = (): Layout => {
   return isLayout(stored) ? stored : 'comfortable'
 }
 
+const readStoredSinglePage = (): boolean => {
+  if (typeof window === 'undefined') return true
+  const stored = window.localStorage.getItem(SINGLE_PAGE_STORAGE_KEY)
+  if (stored === 'true') return true
+  if (stored === 'false') return false
+  return true
+}
+
 const applyRootClass = (prefix: string, value: string) => {
   if (typeof document === 'undefined') return
   const root = document.documentElement
@@ -45,6 +43,7 @@ const applyRootClass = (prefix: string, value: string) => {
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(readStoredTheme)
   const [layout, setLayout] = useState<Layout>(readStoredLayout)
+  const [singlePage, setSinglePage] = useState<boolean>(readStoredSinglePage)
 
   useEffect(() => {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme)
@@ -57,17 +56,13 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   }, [layout])
 
   useEffect(() => {
-    applyRootClass('theme', theme)
-    applyRootClass('layout', layout)
-  }, [])
+    window.localStorage.setItem(SINGLE_PAGE_STORAGE_KEY, String(singlePage))
+  }, [singlePage])
 
-  const value = useMemo(() => ({ theme, setTheme, layout, setLayout }), [theme, layout])
+  const value: SettingsContextValue = useMemo(
+    () => ({ theme, setTheme, layout, setLayout, singlePage, setSinglePage }),
+    [theme, layout, singlePage],
+  )
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
-}
-
-export const useSettings = () => {
-  const context = useContext(SettingsContext)
-  if (!context) throw new Error('useSettings must be used within SettingsProvider')
-  return context
 }
