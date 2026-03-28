@@ -12,6 +12,7 @@ type EditorViewProps = {
 
 export const EditorView = ({ file, mode }: EditorViewProps) => {
   const { layout } = useSettings()
+  const isReadmeMarkdown = file?.kind === 'markdown' && file?.id === 'portfolio/README.md'
   return (
     <div className={[
       'h-full w-full min-w-0 overflow-x-hidden overflow-y-auto bg-surface',
@@ -23,7 +24,11 @@ export const EditorView = ({ file, mode }: EditorViewProps) => {
         </div>
       )}
       {file?.kind === 'json' && <JsonView source={file.source} />}
-      {file?.kind === 'markdown' && <MarkdownView source={file.source} />}
+      {file?.kind === 'markdown' && (isReadmeMarkdown && mode === 'code' ? (
+        <CodeBlock code={file.source} language="markdown" />
+      ) : (
+        <MarkdownView source={file.source} />
+      ))}
       {file?.kind === 'tsx' && file.preview && (
         <div className="h-full w-full min-w-0">
           {mode === 'preview' ? <file.preview /> : <CodeBlock code={file.source} language={file.language} />}
@@ -35,7 +40,7 @@ export const EditorView = ({ file, mode }: EditorViewProps) => {
 
 type CodeBlockProps = {
   code: string
-  language?: 'tsx' | 'ts' | 'jsx'
+  language?: 'tsx' | 'ts' | 'jsx' | 'markdown'
 }
 
 const CodeBlock = ({ code, language = 'tsx' }: CodeBlockProps) => {
