@@ -397,7 +397,7 @@ export const TerminalPanel = ({
 
   return (
     <div
-      className={`group/terminal flex flex-col overflow-hidden border-t border-outline-variant bg-surface-container-low transition-[height] duration-200 ease-out ${open ? 'pointer-events-auto' : 'pointer-events-none'
+      className={`group/terminal flex flex-col overflow-hidden bg-surface-container-low transition-[height] duration-200 ease-out ${open ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
       style={{ height: open ? `${effectiveHeight}px` : '0px' }}
       aria-hidden={!open}
@@ -405,13 +405,13 @@ export const TerminalPanel = ({
       {!isMobile && (
         <div className="relative hidden h-3 md:block">
           <div
-            className={`absolute left-1/2 top-1/2 h-1 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-outline/40 transition-opacity ${terminalResize.isResizing ? 'opacity-100' : 'opacity-0 group-hover/terminal:opacity-100'
+            className={`absolute left-1/2 top-1/2 h-1 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-outline/40 transition-opacity ${terminalResize.isResizing ? 'opacity-100' : 'opacity-0 group-hover/terminal:opacity-100'
               }`}
             {...terminalResize.getHandleProps()}
           />
         </div>
       )}
-      <div className="flex items-center justify-between border-b border-outline-variant px-4 py-2 font-mono text-[11px] uppercase tracking-[0.3em] text-secondary">
+      <div className="flex items-center justify-between border-b border-outline-variant px-2 py-1 font-mono text-[11px] uppercase tracking-[0.3em] text-secondary">
         <span>TERMINAL</span>
         <button
           onClick={onClose}

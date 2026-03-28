@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
-import { getFileById, portfolioFiles } from '../../features/vscode/data/files'
+import { getFileById, portfolioFiles, type PortfolioFile } from '../../features/vscode/data/files'
 import { useWorkspace } from '../../features/vscode/state/useWorkspace'
 import { useWorkbench } from '../../features/vscode/state/useWorkbench'
 import { useSettings } from '../../features/vscode/state/useSettings'
@@ -155,7 +155,8 @@ export const VSCodePortfolio = () => {
   const currentFileId = editorGroups.activeTabByGroup[currentGroupId]
   const currentFile = useMemo(() => getFileById(currentFileId) ?? openFiles[0], [currentFileId, openFiles])
   const currentMode = editorGroups.modeByGroup[currentGroupId] ?? 'preview'
-  const canTogglePreview = currentFile?.kind === 'tsx'
+  const isReadmeMarkdown = (file?: PortfolioFile) => file?.kind === 'markdown' && file?.id === 'portfolio/README.md'
+  const canTogglePreview = currentFile?.kind === 'tsx' || isReadmeMarkdown(currentFile)
 
   const handleToggleCurrentMode = () => {
     if (!canTogglePreview) return
@@ -294,7 +295,7 @@ export const VSCodePortfolio = () => {
                   .filter((f): f is NonNullable<typeof f> => Boolean(f))
                 const file = groupTabs.find((tab) => tab.id === fileId) ?? groupTabs[groupTabs.length - 1] ?? openFiles[0]
                 const mode = editorGroups.modeByGroup[groupId] ?? 'preview'
-                const canGroupToggle = file?.kind === 'tsx'
+                const canGroupToggle = file?.kind === 'tsx' || isReadmeMarkdown(file)
                 return (
                   <Fragment key={`editor-group-${groupId}`}>
                     <div className="flex h-full min-h-0 min-w-0 flex-col" style={{ width: `${groupWidths[index]}px` }}>

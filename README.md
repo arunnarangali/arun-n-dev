@@ -1,73 +1,109 @@
-# React + TypeScript + Vite
+# Arun Narangali – VS Code Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A VS Code-inspired portfolio that presents each section as a “file” inside a simulated workbench (explorer, tabs, editor, terminal, and command palette).
 
-Currently, two official plugins are available:
+## Highlights
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- File-based navigation for portfolio sections
+- Command Palette shortcuts and global search
+- Terminal-style commands for quick actions
+- Theme and layout switching (Dark/Light/High Contrast, Compact/Comfortable)
+- Split editor on desktop for side-by-side views
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19 + TypeScript
+- Vite 8
+- Tailwind CSS + PostCSS
+- ESLint
 
-## Expanding the ESLint configuration
+## Requirements
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js 18.18+ (LTS recommended)
+- npm 9+ (or any npm-compatible package manager)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Getting Started
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open `http://localhost:5173` in your browser.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Scripts
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `npm run dev` — start local dev server
+- `npm run build` — typecheck and build for production
+- `npm run preview` — preview the production build
+- `npm run lint` — run ESLint
+
+## Folder Structure
+
 ```
+.
+├── public/
+├── src/
+│   ├── app/
+│   ├── assets/
+│   ├── features/
+│   │   └── vscode/
+│   │       ├── components/
+│   │       ├── data/
+│   │       ├── hooks/
+│   │       ├── state/
+│   │       └── utils/
+│   ├── pages/
+│   ├── portfolio/
+│   │   ├── data/
+│   │   ├── Home.tsx
+│   │   ├── About.tsx
+│   │   ├── Projects.tsx
+│   │   ├── Experience.tsx
+│   │   ├── Skills.tsx
+│   │   ├── Contact.tsx
+│   │   └── README.md
+│   ├── styles/
+│   ├── types/
+│   └── main.tsx
+├── index.html
+├── vite.config.ts
+├── tailwind.config.js
+├── postcss.config.js
+└── package.json
+```
+
+## Content Updates
+
+- Update portfolio content in `src/portfolio/content.ts`.
+- Update external links in `src/portfolio/data/links.json`.
+- Update metadata in `src/portfolio/data/meta.json`.
+
+## Portfolio Data Sources
+
+- `src/portfolio/content.ts` — hero copy, about, projects, experience, skills, socials
+- `src/portfolio/data/links.json` — GitHub, LinkedIn, website, newsletter
+- `src/portfolio/data/meta.json` — title, description, OG image
+- `src/portfolio/changelog.ts` — career journey + changelog entries
+- `src/portfolio/extensions.ts` — Extensions panel cards
+- `src/portfolio/searchIndex.ts` — global search matching
+
+## Design Principles
+
+- React 18 + TypeScript
+- Tailwind utility surface with custom tokens
+- Accessibility-first (focus states, contrast, semantic groups)
+- Minimal, deliberate motion (no neon glows)
+
+I keep this workspace synced with production worklogs every quarter.
+
+## Deployment
+
+Build output is generated in `dist/`.
+
+```bash
+npm run build
+npm run preview
+```
+
+Host the `dist/` folder on any static hosting provider (Netlify, Vercel, GitHub Pages, etc.).
