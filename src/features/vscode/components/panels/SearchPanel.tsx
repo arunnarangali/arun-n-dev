@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { runSearch, type SearchGroup, type SearchMatch } from '../../../../portfolio/searchIndex'
-import { useSearchHighlight } from '../../state/SearchContext'
+import { useSearchHighlight } from '../../state/useSearchHighlight'
 import { useSettings } from '../../state/useSettings'
 import { Icon } from '../Icon'
 

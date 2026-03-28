@@ -14,12 +14,8 @@ export const CommandPalette = ({ open, onClose, onSelectCommand }: CommandPalett
   const [activeIndex, setActiveIndex] = useState(0)
 
   useEffect(() => {
-    if (open) {
-      inputRef.current?.focus()
-      setQuery('')
-      setActiveIndex(0)
-    }
-  }, [open])
+    inputRef.current?.focus()
+  }, [])
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase()
@@ -27,10 +23,6 @@ export const CommandPalette = ({ open, onClose, onSelectCommand }: CommandPalett
     return commandItems.filter((item) =>
       item.label.toLowerCase().includes(normalized) || item.id.toLowerCase().includes(normalized),
     )
-  }, [query])
-
-  useEffect(() => {
-    setActiveIndex(0)
   }, [query])
 
   if (!open) return null
@@ -45,7 +37,10 @@ export const CommandPalette = ({ open, onClose, onSelectCommand }: CommandPalett
           <input
             ref={inputRef}
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value)
+              setActiveIndex(0)
+            }}
             onKeyDown={(event) => {
               if (event.key === 'ArrowDown') {
                 event.preventDefault()
@@ -68,7 +63,7 @@ export const CommandPalette = ({ open, onClose, onSelectCommand }: CommandPalett
             placeholder="Type a command or search files..."
           />
         </div>
-        <div className="max-h-80 overflow-y-auto pb-2">
+        <div className="vscode-scrollbar max-h-80 overflow-y-auto pb-2">
           {filtered.map((item, index) => {
             const isActive = index === activeIndex
             return (

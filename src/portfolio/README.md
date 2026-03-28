@@ -48,7 +48,8 @@ Browse through the sections to understand my skills, projects, and the outcomes 
 
 - **Command Palette**: `Cmd/Ctrl+Shift+P`, filter commands, navigate with ↑/↓, run with Enter
 - **Close Palette**: `Esc`
-- **Quick Shortcuts**: `Cmd+Shift+F` (Find), `Cmd+K Cmd+T` (Theme), `Ctrl+`` (Terminal), `Cmd+B` (Toggle Sidebar), `Shift+Alt+F` (Format)
+- **Quick Shortcuts**: `Cmd/Ctrl+Shift+Alt+F` (Find), `Cmd/Ctrl+Shift+Alt+T` (Theme), `Ctrl+`` (Terminal), `Cmd/Ctrl+Shift+Alt+B` (Toggle Sidebar), `Cmd/Ctrl+Shift+Alt+L` (Format)
+- **Note**: Some VS Code defaults are browser-reserved; web-safe equivalents are listed here.
 - **Preview ↔ Code**: toggle from the top bar or editor group
 - **Split Editor**: desktop-only split from the top bar
 - **Search**: Activity Bar → Search icon
@@ -58,11 +59,11 @@ Browse through the sections to understand my skills, projects, and the outcomes 
 ## ⌨️ Keyboard Shortcuts
 
 - **Command Palette**: `Cmd/Ctrl+Shift+P`
-- **Find in Files**: `Cmd/Ctrl+Shift+F`
-- **Open Theme**: `Cmd/Ctrl+K` then `Cmd/Ctrl+T`
+- **Find in Files**: `Cmd/Ctrl+Shift+Alt+F`
+- **Open Theme**: `Cmd/Ctrl+Shift+Alt+T`
 - **Focus Terminal**: `Ctrl+``
-- **Toggle Sidebar**: `Cmd/Ctrl+B`
-- **Format Document**: `Shift+Alt+F`
+- **Toggle Sidebar**: `Cmd/Ctrl+Shift+Alt+B`
+- **Format Document**: `Cmd/Ctrl+Shift+Alt+L`
 
 ---
 
@@ -92,6 +93,7 @@ resume
 - **Settings modal** (gear icon in Activity Bar)
   - Theme: Dark+, Light+, High Contrast
   - Layout: Comfortable or Compact
+- **Editor mode**: Single page (default ON) lets you scroll all sections while tabs follow automatically; code is view-only
 - **Terminal shortcuts**
   - `theme dark` / `theme light` / `theme highContrast`
   - `layout comfortable` / `layout compact`

@@ -1,0 +1,1 @@
+echo "Post-commit: consider running 'npm run build' before pushing."

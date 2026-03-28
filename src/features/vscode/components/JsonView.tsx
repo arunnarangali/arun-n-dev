@@ -61,7 +61,7 @@ export const JsonView = ({ source }: JsonViewProps) => {
     try {
       const parsed = JSON.parse(source)
       return JSON.stringify(parsed, null, 2)
-    } catch (error) {
+    } catch {
       return source
     }
   }, [source])

@@ -15,6 +15,7 @@ type UseResizablePanelOptions = {
   getMax: (viewport: Viewport) => number
   enabled: boolean
   invert?: boolean
+  onResizeEnd?: (size: number) => number | void
 }
 
 type HandleProps = {
@@ -32,6 +33,7 @@ export const useResizablePanel = ({
   getMax,
   enabled,
   invert = false,
+  onResizeEnd,
 }: UseResizablePanelOptions) => {
   const isHorizontal = axis === 'x'
   const [viewport, setViewport] = useState<Viewport>(() => ({
@@ -57,9 +59,7 @@ export const useResizablePanel = ({
     [getMax, min, viewport],
   )
 
-  useEffect(() => {
-    setSize((current) => clamp(current))
-  }, [clamp])
+  const clampedSize = clamp(size)
 
   useEffect(() => {
     if (!enabled || !isResizing) return
@@ -83,8 +83,8 @@ export const useResizablePanel = ({
 
   useEffect(() => {
     if (!enabled) return
-    window.localStorage.setItem(storageKey, String(size))
-  }, [enabled, size, storageKey])
+    window.localStorage.setItem(storageKey, String(clampedSize))
+  }, [clampedSize, enabled, storageKey])
 
   const beginResize = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
@@ -94,10 +94,12 @@ export const useResizablePanel = ({
       const startPos = isHorizontal ? event.clientX : event.clientY
       const startSize = size
       const direction = invert ? -1 : 1
+      let nextSize = startSize
       const handleMove = (moveEvent: PointerEvent) => {
         const currentPos = isHorizontal ? moveEvent.clientX : moveEvent.clientY
         const delta = (currentPos - startPos) * direction
-        setSize(clamp(startSize + delta))
+        nextSize = clamp(startSize + delta)
+        setSize(nextSize)
       }
       const handlePointerUp = () => {
         setResizing(false)
@@ -105,6 +107,10 @@ export const useResizablePanel = ({
         document.body.style.removeProperty('user-select')
         window.removeEventListener('pointermove', handleMove)
         window.removeEventListener('pointerup', handlePointerUp)
+        const result = onResizeEnd?.(nextSize)
+        if (typeof result === 'number') {
+          setSize(clamp(result))
+        }
       }
       document.body.style.cursor = isHorizontal ? 'col-resize' : 'row-resize'
       document.body.style.userSelect = 'none'
@@ -112,7 +118,7 @@ export const useResizablePanel = ({
       window.addEventListener('pointermove', handleMove)
       window.addEventListener('pointerup', handlePointerUp)
     },
-    [clamp, enabled, invert, isHorizontal, size],
+    [clamp, enabled, invert, isHorizontal, onResizeEnd, size],
   )
 
   const getHandleProps = useCallback((): HandleProps => {
@@ -125,7 +131,7 @@ export const useResizablePanel = ({
   }, [axis, beginResize, isHorizontal])
 
   return {
-    size,
+    size: clampedSize,
     setSize: (value: number) => setSize(clamp(value)),
     isResizing,
     getHandleProps,

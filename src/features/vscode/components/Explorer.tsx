@@ -113,7 +113,7 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
   return (
     <aside className={[wrapperClass, isCompact ? 'text-[10px]' : 'text-[11px]'].join(' ')}>
       <div className="flex items-center justify-between px-4 py-3 text-on-surface-variant">
-        <span className="font-bold">Explorer: portfolio</span>
+        <span className="font-bold">Explorer: Arun N Portfolio</span>
         <Icon name="more_horiz" className="text-[14px]" />
       </div>
 

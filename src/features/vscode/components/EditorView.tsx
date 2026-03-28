@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Highlight, themes } from 'prism-react-renderer'
+import { Highlight, themes, type Language, type RenderProps } from 'prism-react-renderer'
 import type { PortfolioFile } from '../data/files'
 import { JsonView } from './JsonView'
 import { MarkdownView } from './MarkdownView'
@@ -15,7 +15,7 @@ export const EditorView = ({ file, mode }: EditorViewProps) => {
   const isReadmeMarkdown = file?.kind === 'markdown' && file?.id === 'portfolio/README.md'
   return (
     <div className={[
-      'h-full w-full min-w-0 overflow-x-hidden overflow-y-auto bg-surface',
+      'vscode-scrollbar h-full w-full min-w-0 overflow-x-hidden overflow-y-auto bg-surface',
       layout === 'compact' ? 'p-4' : 'p-6',
     ].join(' ')}>
       {!file && (
@@ -40,7 +40,7 @@ export const EditorView = ({ file, mode }: EditorViewProps) => {
 
 type CodeBlockProps = {
   code: string
-  language?: 'tsx' | 'ts' | 'jsx' | 'markdown'
+  language?: Language
 }
 
 const CodeBlock = ({ code, language = 'tsx' }: CodeBlockProps) => {
@@ -49,15 +49,15 @@ const CodeBlock = ({ code, language = 'tsx' }: CodeBlockProps) => {
   const prismTheme = theme === 'light' ? themes.vsLight : themes.vsDark
   return (
     <div className="rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-4">
-      <Highlight code={trimmed} language={language as any} theme={prismTheme}>
-        {({ className, style, tokens, getLineProps, getTokenProps }: any) => (
+      <Highlight code={trimmed} language={language} theme={prismTheme}>
+        {({ className, style, tokens, getLineProps, getTokenProps }: RenderProps) => (
           <pre
-            className={`${className} max-h-[70vh] overflow-auto whitespace-pre-wrap break-words rounded-2xl text-sm`}
+            className={`${className} vscode-scrollbar max-h-[70vh] overflow-auto whitespace-pre-wrap break-words rounded-2xl text-sm`}
             style={{ ...style, background: 'transparent', padding: '1.5rem' }}
           >
-            {tokens.map((line: any, i: number) => (
+            {tokens.map((line, i) => (
               <div key={`line-${i}`} {...getLineProps({ line, key: i })}>
-                {line.map((token: any, key: number) => (
+                {line.map((token, key) => (
                   <span key={key} {...getTokenProps({ token, key })} />
                 ))}
               </div>

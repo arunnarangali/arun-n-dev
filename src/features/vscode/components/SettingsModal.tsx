@@ -1,5 +1,7 @@
+import { useEffect, useRef, useState } from 'react'
 import { Modal } from './Modal'
 import { Icon } from './Icon'
+import { SinglePageConfirmCallout } from './SinglePageConfirmCallout'
 import { useSettings } from '../state/useSettings'
 
 type SettingsModalProps = {
@@ -31,10 +33,31 @@ const layouts: LayoutOption[] = [
 ]
 
 export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
-  const { theme, setTheme, layout, setLayout } = useSettings()
+  const { theme, setTheme, layout, setLayout, singlePage, setSinglePage } = useSettings()
+  const [pendingSinglePage, setPendingSinglePage] = useState<boolean | null>(null)
+  const [isApplyingSinglePage, setApplyingSinglePage] = useState(false)
+  const applyTimeoutRef = useRef<number | null>(null)
+
+  const handleClose = () => {
+    setPendingSinglePage(null)
+    setApplyingSinglePage(false)
+    if (applyTimeoutRef.current !== null) {
+      window.clearTimeout(applyTimeoutRef.current)
+      applyTimeoutRef.current = null
+    }
+    onClose()
+  }
+
+  useEffect(() => {
+    return () => {
+      if (applyTimeoutRef.current !== null) {
+        window.clearTimeout(applyTimeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Settings" icon="settings">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Settings" icon="settings">
       <div className="space-y-4">
         <section>
           <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Theme</h3>
@@ -82,12 +105,50 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
         </section>
 
         <section>
+          <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Editor</h3>
+          <button
+            onClick={() => setPendingSinglePage(!singlePage)}
+            className={`group flex w-full items-center justify-between rounded-lg border p-2 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow hover:shadow-black/10 ${singlePage
+              ? 'border-accent/60 bg-accent/10 ring-1 ring-accent/20'
+              : 'border-outline-variant/60 bg-surface-container-lowest hover:border-accent/40 hover:bg-surface-container-low'
+              }`}
+          >
+            <div>
+              <span className="text-[11px] text-on-surface">Single page</span>
+              <p className="text-[9px] text-secondary/60">Scroll all sections; tabs follow. Code is view-only.</p>
+            </div>
+            <Icon
+              name={singlePage ? 'toggle_on' : 'toggle_off'}
+              className={singlePage ? 'text-accent text-[20px]' : 'text-secondary/40 text-[20px]'}
+            />
+          </button>
+          {pendingSinglePage !== null && (
+            <SinglePageConfirmCallout
+              pendingValue={pendingSinglePage}
+              isApplying={isApplyingSinglePage}
+              onCancel={() => setPendingSinglePage(null)}
+              onConfirm={() => {
+                if (pendingSinglePage === null) return
+                setApplyingSinglePage(true)
+                applyTimeoutRef.current = window.setTimeout(() => {
+                  setSinglePage(pendingSinglePage)
+                  setPendingSinglePage(null)
+                  setApplyingSinglePage(false)
+                  applyTimeoutRef.current = null
+                }, 320)
+              }}
+            />
+          )}
+        </section>
+
+        <section>
           <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Resume</h3>
           <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-container px-3 py-2 text-[11px] font-medium text-on-primary transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary hover:shadow-md hover:shadow-primary/20">
             <Icon name="download" className="text-[14px]" />
             Download Resume (PDF)
           </button>
         </section>
+
       </div>
     </Modal>
   )

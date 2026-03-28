@@ -53,7 +53,7 @@ export const LeftPanel = ({ view, files, openFiles, activeId, onSelectFile, vari
             <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
         </div>
-        <div className="flex-1 overflow-auto">{renderPanel()}</div>
+        <div className="vscode-scrollbar flex-1 overflow-auto">{renderPanel()}</div>
       </div>
     )
   }
