@@ -29,6 +29,8 @@ export const VSCodePortfolio = () => {
   const [isSettingsOpen, setSettingsOpen] = useState(false)
   const [isLoaderOpen, setLoaderOpen] = useState(false)
   const [isTerminalOpen, setTerminalOpen] = useState(true)
+  const [terminalFocusSignal, setTerminalFocusSignal] = useState(0)
+  const [commandFeedback, setCommandFeedback] = useState('')
   const editorGroups = useEditorGroups()
   const {
     setActiveTabForGroup,
@@ -93,6 +95,12 @@ export const VSCodePortfolio = () => {
       fallbackFileId,
     )
   }, [openFiles, fallbackFileId, ensureTabsValid])
+
+  useEffect(() => {
+    if (!commandFeedback) return
+    const timeout = window.setTimeout(() => setCommandFeedback(''), 1800)
+    return () => window.clearTimeout(timeout)
+  }, [commandFeedback])
 
   const handleOpenFile = useCallback(
     (id: string, targetGroup: EditorGroupId = editorGroups.activeGroup) => {
@@ -162,6 +170,41 @@ export const VSCodePortfolio = () => {
     if (!canTogglePreview) return
     toggleGroupMode(currentGroupId)
   }
+
+  const pushCommandFeedback = useCallback((message: string) => {
+    setCommandFeedback(message)
+  }, [])
+
+  const handleCommandSelect = useCallback(
+    (id: string) => {
+      switch (id) {
+        case 'find-in-files':
+          workbench.openView('search')
+          break
+        case 'open-theme':
+          handleOpenModalWithLoader(setSettingsOpen)
+          break
+        case 'focus-terminal':
+          setTerminalOpen(true)
+          setTerminalFocusSignal((signal) => signal + 1)
+          break
+        case 'toggle-sidebar':
+          workbench.toggleLeftPanel()
+          break
+        case 'format-document':
+          if (currentFile && currentMode === 'code') {
+            pushCommandFeedback('Document formatted.')
+          } else {
+            pushCommandFeedback('Format works in code view only.')
+          }
+          break
+        default:
+          break
+      }
+      closeCommandPalette()
+    },
+    [closeCommandPalette, currentFile, currentMode, handleOpenModalWithLoader, pushCommandFeedback, workbench],
+  )
 
   const sidebarResize = useResizablePanel({
     axis: 'x',
@@ -322,17 +365,18 @@ export const VSCodePortfolio = () => {
               })}
             </div>
           </div>
-          <TerminalPanel
-            open={isTerminalOpen}
-            onClose={() => setTerminalOpen(false)}
-            files={portfolioFiles}
-            onOpenFile={(id) => handleOpenFile(id)}
-            theme={settings.theme}
-            layout={settings.layout}
-            setTheme={settings.setTheme}
-            setLayout={settings.setLayout}
-            links={links as Record<string, string | undefined>}
-          />
+        <TerminalPanel
+          open={isTerminalOpen}
+          onClose={() => setTerminalOpen(false)}
+          files={portfolioFiles}
+          onOpenFile={(id) => handleOpenFile(id)}
+          theme={settings.theme}
+          layout={settings.layout}
+          setTheme={settings.setTheme}
+          setLayout={settings.setLayout}
+          links={links as Record<string, string | undefined>}
+          focusSignal={terminalFocusSignal}
+        />
         </main>
       </div>
       {workbench.isLeftPanelOpen && (
@@ -351,8 +395,13 @@ export const VSCodePortfolio = () => {
           </div>
         </div>
       )}
+      {commandFeedback && (
+        <div className="fixed bottom-8 right-4 z-50 rounded-lg border border-outline-variant bg-surface-container-high px-3 py-2 text-xs text-on-surface shadow-lg">
+          {commandFeedback}
+        </div>
+      )}
       <StatusBar />
-      <CommandPalette open={isCommandPaletteOpen} onClose={closeCommandPalette} />
+      <CommandPalette open={isCommandPaletteOpen} onClose={closeCommandPalette} onSelectCommand={handleCommandSelect} />
       {isLoaderOpen && <LoaderScreen />}
       <ProfileModal isOpen={isProfileOpen} onClose={() => setProfileOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
