@@ -1,25 +1,3 @@
-export const heroContent = {
-  title: 'Frontend developer building fast, accessible React experiences',
-  subtitle:
-    '2+ years crafting reusable components, optimizing performance, and integrating robust React.js + TypeScript applications.',
-  ctas: [
-    { label: 'View Projects', href: '#projects' },
-    { label: 'Contact Me', href: '#contact', variant: 'ghost' },
-  ],
-  metrics: [
-    { label: 'Years experience', value: '2+' },
-    { label: 'Primary stack', value: 'React + TS' },
-    { label: 'Projects shipped', value: '5+' },
-  ],
-}
-
-export const aboutContent = {
-  name: 'Arun N',
-  role: 'Frontend Developer',
-  bio: `Frontend Developer with 2+ years experience building fast, accessible React.js and TypeScript applications. Skilled at designing reusable components, improving performance, and ensuring smooth backend integration. Experienced in guiding teams, maintaining code quality, and delivering great user experiences using React.js, Redux, and Tailwind CSS.`,
-  highlights: ['Calicut, Kerala', 'React + TypeScript', 'Open to Work'],
-}
-
 export type ProjectCard = {
   title: string
   summary: string
@@ -32,44 +10,66 @@ export const projects: ProjectCard[] = [
   {
     title: 'Tseep — Learning Management Platform',
     summary:
-      'Multi-portal learning platform with student, teacher, and HR portals for attendance, certification, and institute management.',
+      'Architected a multi-portal ecosystem for institutional scale, featuring high-availability student, teacher, and HR flows with complex state synchronization.',
     stack: ['React.js', 'Golang', 'PostgreSQL'],
     image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1000&q=80',
     href: '#',
   },
   {
-    title: 'Tsepp Skill Mapping (Intelitraits)',
+    title: 'Intelitraits — Cognitive Assessment Engine',
     summary:
-      'Skill assessment platform with EI/MI MCQ exams, automated scoring, and consolidated reporting dashboards.',
+      'Engineered a high-throughput skill mapping platform leveraging automated scoring algorithms and consolidated real-time reporting dashboards.',
     stack: ['React.js', 'Tailwind CSS', 'Golang'],
     image: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1000&q=80',
     href: '#',
   },
   {
-    title: 'VanForces — Van Sales Management System',
+    title: 'VanForces — Logistics Micro-Workflows',
     summary:
-      'SaaS platform for van sales operations with live route planning, monitoring, and mobile-first field workflows.',
+      'Developed a mission-critical SaaS for field operations, optimizing live route planning and mobile-first data synchronization for complex supply chains.',
     stack: ['React.js', 'Golang', 'GPS Integration'],
     image: 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&w=1000&q=80',
     href: '#',
   },
   {
-    title: 'DataStream — Real-Time Data Processing',
+    title: 'DataStream — Real-Time Analytics Pipeline',
     summary:
-      'Streaming pipeline built with Kafka and Golang, backed by SQL + ClickHouse for fast analytics.',
+      'Engineered a streaming architecture utilizing Kafka for event-driven data processing, backed by ClickHouse for sub-second analytical queries.',
     stack: ['Golang', 'Kafka', 'SQL', 'ClickHouse'],
     image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
     href: '#',
   },
   {
-    title: 'My Library — Digital Book Platform',
+    title: 'Libro — Optimized Discovery Platform',
     summary:
-      'MERN application for book discovery, search, and management with responsive UI and optimized backend queries.',
+      'Full-stack MERN orchestration focused on UX-driven search and high-performance backend query patterns for seamless book discovery.',
     stack: ['MongoDB', 'Express.js', 'React.js', 'Node.js'],
     image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1000&q=80',
     href: '#',
   },
 ]
+
+export const heroContent = {
+  title: 'My name is Arun N',
+  subtitle:
+    'Senior Frontend Specialist crafting resilient, mission-critical React systems with a focus on deep accessibility and elite engineering standards.',
+  ctas: [
+    { label: 'Explore Systems', href: '#projects' },
+    { label: 'Strategic Connection', href: '#contact', variant: 'ghost' },
+  ],
+  metrics: [
+    { label: 'Specialized Experience', value: '2.5+', icon: 'history_edu' },
+    { label: 'Expert Stack', value: 'React / TS / Go', icon: 'terminal' },
+    { label: 'Production Shipments', value: `${projects.length}+`, icon: 'rocket_launch' },
+  ],
+}
+
+export const aboutContent = {
+  name: 'Arun N',
+  role: 'Frontend Architect',
+  bio: `Frontend Architect with over 2.5 years of experience in engineering high-performance, accessible digital ecosystems. Specialized in bridging complex design systems with robust engineering, ensuring every interaction feels premium and every line of code is scalable. Expert in systems thinking, pragmatic architecting, and cross-functional leadership within agile environments.`,
+  highlights: ['Calicut, Kerala', 'Systems Specialist', 'Open to Strategic Roles'],
+}
 
 export const experiences = [
   {
@@ -116,15 +116,18 @@ export const experiences = [
 ]
 
 export const skillGroups = [
-  { label: 'Languages', items: ['JavaScript', 'TypeScript', 'Go (Basic)'] },
-  { label: 'Frontend', items: ['React.js', 'Redux', 'Tailwind CSS', 'HTML5', 'CSS3', 'Responsive Design'] },
-  { label: 'Tooling', items: ['Git', 'Vite', 'npm', 'Webpack', 'VS Code', 'Chrome DevTools'] },
-  { label: 'Backend & APIs', items: ['Node.js', 'REST APIs', 'MongoDB', 'SQL', 'Axios', 'Gin Framework'] },
-  { label: 'Testing & Quality', items: ['Code Reviews', 'Performance Optimization', 'Cross-Browser Testing', 'Debugging', 'Unit Testing'] },
+  { label: 'Engineering Core', items: ['TypeScript', 'JavaScript', 'Golang', 'SQL'] },
+  { label: 'Digital Experiences', items: ['React.js', 'Redux', 'Tailwind CSS', 'Framer Motion', 'Responsive Architecture'] },
+  { label: 'Architectural Tooling', items: ['Vite', 'Git', 'Webpack', 'VS Code', 'Chrome DevTools', 'Postmen'] },
+  { label: 'Backend & Ecosystem', items: ['Node.js', 'REST APIs', 'MongoDB', 'Kafka', 'ClickHouse', 'Gin Framework'] },
+  { label: 'Quality Assurance', items: ['Performance Auditing', 'Unit Testing', 'Code Reviews', 'Accessibility Auditing'] },
 ]
 
+export const allSkills = skillGroups.flatMap((g) => g.items)
+
 export const socials = [
-  { label: 'Email', value: 'arunnarangali123@gmail.com', href: 'mailto:arunnarangali123@gmail.com' },
-  { label: 'LinkedIn', value: 'linkedin.com/in/arun', href: 'https://linkedin.com/in/arun' },
-  { label: 'Phone', value: '+91 8086370576', href: 'tel:+918086370576' },
+  { label: 'Direct Email', value: 'arunnarangali123@gmail.com', href: 'mailto:arunnarangali123@gmail.com' },
+  { label: 'Professional Orbit', value: 'linkedin.com/in/arun-narangali', href: 'https://www.linkedin.com/in/arun-narangali' },
+  { label: 'Secure Line', value: '+91 8086370576', href: 'tel:+918086370576' },
+  { label: 'Repositories', value: 'github.com/arunnarangali', href: 'https://github.com/arunnarangali?tab=repositories' },
 ]

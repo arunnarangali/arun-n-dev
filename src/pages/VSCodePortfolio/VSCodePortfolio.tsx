@@ -11,7 +11,6 @@ import { MacTitleBar } from '../../features/vscode/components/MacTitleBar'
 import { ProfileModal } from '../../features/vscode/components/ProfileModal'
 import { SettingsModal } from '../../features/vscode/components/SettingsModal'
 import { StatusBar } from '../../features/vscode/components/StatusBar'
-import { LoaderScreen } from '../../features/vscode/components/LoaderScreen'
 import { TerminalPanel } from '../../features/vscode/components/panels/TerminalPanel'
 import links from '../../portfolio/data/links.json'
 import { useResizablePanel } from '../../features/vscode/hooks/useResizablePanel'
@@ -24,14 +23,14 @@ import { AuxEditorOverlay } from '../../features/vscode/components/AuxEditorOver
 import { useElementSize } from '../../features/vscode/hooks/useElementSize'
 
 const SIDEBAR_DEFAULT_WIDTH = 240
-const MIN_EDITOR_PANE = 320
+const MIN_EDITOR_PANE_DESKTOP = 320
+const MIN_EDITOR_PANE_MOBILE = 280
 
 export const VSCodePortfolio = () => {
   const workbench = useWorkbench()
   const settings = useSettings()
   const [isProfileOpen, setProfileOpen] = useState(false)
   const [isSettingsOpen, setSettingsOpen] = useState(false)
-  const [isLoaderOpen, setLoaderOpen] = useState(false)
   const [isTerminalOpen, setTerminalOpen] = useState(() => !settings.singlePage)
   const [terminalFocusSignal, setTerminalFocusSignal] = useState(0)
   const [commandFeedback, setCommandFeedback] = useState('')
@@ -171,13 +170,6 @@ export const VSCodePortfolio = () => {
     ],
   )
 
-  const handleOpenModalWithLoader = useCallback((openSetter: (open: boolean) => void) => {
-    setLoaderOpen(true)
-    setTimeout(() => {
-      setLoaderOpen(false)
-      openSetter(true)
-    }, 600)
-  }, [])
 
   const handleSelectTab = useCallback(
     (groupId: EditorGroupId, id: string) => {
@@ -310,11 +302,7 @@ export const VSCodePortfolio = () => {
         }
         if (key === 't') {
           event.preventDefault()
-          setLoaderOpen(true)
-          setTimeout(() => {
-            setLoaderOpen(false)
-            setSettingsOpen(true)
-          }, 600)
+          setSettingsOpen(true)
           return
         }
         if (key === 'b') {
@@ -339,7 +327,6 @@ export const VSCodePortfolio = () => {
     currentFile,
     currentMode,
     setCommandFeedback,
-    setLoaderOpen,
     setSettingsOpen,
     setTerminalFocusSignal,
     setTerminalOpen,
@@ -358,7 +345,7 @@ export const VSCodePortfolio = () => {
           workbench.openView('search')
           break
         case 'open-theme':
-          handleOpenModalWithLoader(setSettingsOpen)
+          setSettingsOpen(true)
           break
         case 'focus-terminal':
           setTerminalOpen(true)
@@ -379,8 +366,10 @@ export const VSCodePortfolio = () => {
       }
       closeCommandPalette()
     },
-    [closeCommandPalette, currentFile, currentMode, handleOpenModalWithLoader, pushCommandFeedback, workbench],
+    [closeCommandPalette, currentFile, currentMode, pushCommandFeedback, workbench],
   )
+
+  const MIN_EDITOR_PANE = isDesktop ? MIN_EDITOR_PANE_DESKTOP : MIN_EDITOR_PANE_MOBILE
 
   const sidebarResize = useResizablePanel({
     axis: 'x',
@@ -393,7 +382,7 @@ export const VSCodePortfolio = () => {
 
   const sidebarHandleProps = sidebarResize.getHandleProps()
 
-  const editorWidthFallback = typeof window !== 'undefined' ? window.innerWidth - SIDEBAR_DEFAULT_WIDTH : 1200
+  const editorWidthFallback = typeof window !== 'undefined' ? window.innerWidth - (isDesktop ? SIDEBAR_DEFAULT_WIDTH : 0) : 1200
   const editorWidth = Math.max(editorAreaSize.width || editorWidthFallback, MIN_EDITOR_PANE * editorGroups.groupCount)
 
   const splitOne = useResizablePanel({
@@ -402,14 +391,16 @@ export const VSCodePortfolio = () => {
     defaultSize: Math.max(MIN_EDITOR_PANE, editorWidth / 2),
     min: MIN_EDITOR_PANE,
     getMax: () => Math.max(MIN_EDITOR_PANE, editorWidth - MIN_EDITOR_PANE),
-    enabled: editorGroups.groupCount > 1,
+    enabled: editorGroups.groupCount > 1 && isDesktop,
   })
 
   const SPLITTER_WIDTH = 6
-  const availableWidth = Math.max(
-    (editorGroups.groupCount === 2 ? editorWidth - SPLITTER_WIDTH : editorWidth),
-    MIN_EDITOR_PANE * editorGroups.groupCount,
-  )
+  const availableWidth = isDesktop 
+    ? Math.max(
+        (editorGroups.groupCount === 2 ? editorWidth - SPLITTER_WIDTH : editorWidth),
+        MIN_EDITOR_PANE * editorGroups.groupCount,
+      )
+    : (editorAreaSize.width || window.innerWidth)
 
   const setGroupCountWithMirror = useCallback(
     (count: 1 | 2) => {
@@ -478,8 +469,8 @@ export const VSCodePortfolio = () => {
           activeView={workbench.activeView}
           onToggleExplorer={workbench.toggleExplorer}
           onSelectView={workbench.openView}
-          onOpenProfile={() => handleOpenModalWithLoader(setProfileOpen)}
-          onOpenSettings={() => handleOpenModalWithLoader(setSettingsOpen)}
+          onOpenProfile={() => setProfileOpen(true)}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
         <div className="hidden md:flex">
           {workbench.isLeftPanelOpen && (
@@ -508,7 +499,7 @@ export const VSCodePortfolio = () => {
             <div className="group/editor flex h-full min-h-0 overflow-hidden">
               {showSinglePageScrollView ? (
                 <>
-                  <div className="flex h-full min-h-0 min-w-0 flex-col" style={{ width: `${groupWidths[0] ?? availableWidth}px` }}>
+                  <div className="flex h-full min-h-0 min-w-0 flex-col" style={{ width: isDesktop ? `${groupWidths[0] ?? availableWidth}px` : '100%' }}>
                     <EditorTabs
                       tabs={(editorGroups.tabsByGroup[0] ?? [])
                         .map((tabId) => getFileById(tabId))
@@ -537,8 +528,9 @@ export const VSCodePortfolio = () => {
                         const file = groupTabs.find((tab) => tab.id === fileId) ?? groupTabs[groupTabs.length - 1] ?? openFiles[0]
                         const mode = editorGroups.modeByGroup[groupId] ?? 'preview'
                         const canGroupToggle = file?.kind === 'tsx' || isReadmeMarkdown(file)
+                        const groupWidth = groupWidths[1] ?? MIN_EDITOR_PANE
                         return (
-                          <div className="flex h-full min-h-0 min-w-0 flex-col" style={{ width: `${groupWidths[1] ?? MIN_EDITOR_PANE}px` }}>
+                          <div className="flex h-full min-h-0 min-w-0 flex-col" style={{ width: isDesktop ? `${groupWidth}px` : '100%' }}>
                             <EditorGroup
                               tabs={groupTabs}
                               activeTabId={file?.id}
@@ -571,9 +563,10 @@ export const VSCodePortfolio = () => {
                   const file = groupTabs.find((tab) => tab.id === fileId) ?? groupTabs[groupTabs.length - 1] ?? openFiles[0]
                   const mode = editorGroups.modeByGroup[groupId] ?? 'preview'
                   const canGroupToggle = file?.kind === 'tsx' || isReadmeMarkdown(file)
+                  const groupWidth = groupWidths[index]
                   return (
                     <Fragment key={`editor-group-${groupId}`}>
-                      <div className="flex h-full min-h-0 min-w-0 flex-col" style={{ width: `${groupWidths[index]}px` }}>
+                      <div className="flex h-full min-h-0 min-w-0 flex-col" style={{ width: isDesktop ? `${groupWidth}px` : '100%' }}>
                         <EditorGroup
                           tabs={groupTabs}
                           activeTabId={file?.id}
@@ -670,7 +663,6 @@ export const VSCodePortfolio = () => {
       {isCommandPaletteOpen && (
         <CommandPalette open={isCommandPaletteOpen} onClose={closeCommandPalette} onSelectCommand={handleCommandSelect} />
       )}
-      {isLoaderOpen && <LoaderScreen />}
       <ProfileModal isOpen={isProfileOpen} onClose={() => setProfileOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
       <FloatingContact />
