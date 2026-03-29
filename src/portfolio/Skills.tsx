@@ -1,34 +1,47 @@
+import { motion } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import { useSearchHighlight } from '../features/vscode/state/useSearchHighlight'
-import { highlightText } from '../features/vscode/utils/highlight'
 import { skillGroups } from './content'
+import { SkillsHeader } from './components/skills/SkillsHeader'
+import { SkillGroupCard } from './components/skills/SkillGroupCard'
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.4, ease: 'easeOut' },
+  },
+}
 
 export const SkillsSection = () => {
   const { query } = useSearchHighlight()
   return (
-    <section className="mx-auto w-full max-w-7xl space-y-6 rounded-2xl border border-outline-variant bg-surface-container-low p-8 text-on-surface">
-      <header>
-        <p className="text-xs uppercase tracking-[0.4em] text-on-surface-variant">Skills</p>
-        <h2 className="text-3xl font-semibold">Systems thinking paired with pragmatic delivery</h2>
-        <p className="text-sm text-on-surface-variant">Tooling and languages I reach for when building resilient front-ends.</p>
-      </header>
-      <div className="grid gap-4 md:grid-cols-2">
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-100px' }}
+      variants={containerVariants}
+      className="mx-auto w-full max-w-7xl space-y-8 overflow-hidden rounded-[2.5rem] border border-outline-variant bg-surface-container-low p-5 text-on-surface shadow-2xl @container @sm:p-8 @3xl:space-y-12 @5xl:p-14"
+    >
+      <SkillsHeader variants={itemVariants} />
+
+      <div className="grid gap-4 @6xl:grid-cols-2 @6xl:gap-6 @7xl:grid-cols-3">
         {skillGroups.map((group) => (
-          <article key={group.label} className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">{highlightText(group.label, query)}</h3>
-              <span className="rounded-full border border-outline-variant px-3 py-1 text-xs text-on-surface-variant">{group.items.length}</span>
-            </div>
-            <div className="flex flex-wrap gap-2 text-sm text-on-surface-variant">
-              {group.items.map((item) => (
-                <span key={item} className="rounded-full bg-surface-container-high px-3 py-1 text-emerald-600">
-                  {highlightText(item, query)}
-                </span>
-              ))}
-            </div>
-          </article>
+          <SkillGroupCard key={group.label} group={group} query={query} variants={itemVariants} />
         ))}
       </div>
-    </section>
+    </motion.section>
   )
 }
 

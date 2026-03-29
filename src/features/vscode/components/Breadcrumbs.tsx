@@ -7,14 +7,18 @@ type BreadcrumbsProps = {
 export const Breadcrumbs = ({ path = [] }: BreadcrumbsProps) => {
   if (path.length === 0) return null
   return (
-    <div className="flex items-center gap-1 px-4 py-1 font-mono text-[11px] text-on-surface-variant/70">
+    <div className="flex items-center gap-1.5 px-4 h-6 font-sans text-[12px] text-on-surface-variant/80">
       {path.map((segment, index) => {
         const isLast = index === path.length - 1
         return (
-          <span key={`${segment}-${index}`} className="flex items-center gap-1">
-            <span className={isLast ? 'text-primary' : undefined}>{segment}</span>
-            {index < path.length - 1 && <Icon name="chevron_right" className="text-[12px] text-on-surface-variant/70" />}
-          </span>
+          <div key={`${segment}-${index}`} className="group flex items-center gap-1 cursor-pointer hover:bg-surface-container-high/60 px-1 rounded transition-colors h-full">
+            <span className={`transition-colors group-hover:text-accent ${isLast ? 'text-on-surface font-semibold' : ''}`}>
+              {segment}
+            </span>
+            {!isLast && (
+              <Icon name="chevron_right" className="text-[14px] text-on-surface-variant/40" />
+            )}
+          </div>
         )
       })}
     </div>

@@ -418,18 +418,23 @@ export const TerminalPanel = ({
           />
         </div>
       )}
-      <div className="flex items-center justify-between border-b border-outline-variant px-2 py-1 font-mono text-[11px] uppercase tracking-[0.3em] text-secondary">
-        <span>TERMINAL</span>
+      <div className="flex items-center justify-between border-b border-outline-variant bg-surface px-2 h-9 font-sans text-[11px] uppercase tracking-widest text-on-surface-variant/60">
+        <div className="flex h-full items-center gap-6 px-2">
+          <button className="flex h-full items-center border-b border-primary text-primary font-bold">Terminal</button>
+          <button className="flex h-full items-center hover:text-on-surface transition-colors">Output</button>
+          <button className="flex h-full items-center hover:text-on-surface transition-colors">Problems</button>
+          <button className="flex h-full items-center hover:text-on-surface transition-colors">Debug Console</button>
+        </div>
         <button
           onClick={onClose}
-          className="rounded p-1 text-secondary transition-colors hover:bg-surface-container-high hover:text-on-surface"
+          className="rounded p-1 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors"
           aria-label="Close terminal"
         >
-          <Icon name="close" className="text-sm" />
+          <Icon name="close" className="text-[14px]" />
         </button>
       </div>
       <div className="flex min-h-0 flex-1 flex-col bg-[rgb(var(--c-terminal-bg))]">
-        <div ref={scrollRef} className="vscode-scrollbar flex-1 overflow-auto px-4 py-3 font-mono text-xs text-on-surface">
+        <div ref={scrollRef} className="vscode-scrollbar flex-1 overflow-auto px-4 py-3 font-mono text-sm text-on-surface">
           {lines.length === 0 && <p className="text-secondary/70">Session cleared. Type `help` to continue.</p>}
           {lines.map((line) => {
             if (line.variant === 'banner') {
@@ -460,20 +465,21 @@ export const TerminalPanel = ({
                     : 'text-on-surface'
                   }`}
               >
-                {line.variant === 'input' ? `${promptLabel} ~ % ${line.content}` : line.content}
+                {line.variant === 'input' ? `${promptLabel}:~$ ${line.content}` : line.content}
               </p>
             )
           })}
         </div>
-        <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-outline-variant px-4 py-2 font-mono text-xs text-on-surface">
-          <span className="text-accent">{promptLabel} ~ %</span>
+        <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-outline-variant px-4 py-1.5 font-mono text-sm text-on-surface bg-surface/5">
+          <span className="text-primary/70">{promptLabel}</span>
+          <span className="text-accent">:~$</span>
           <input
             ref={inputRef}
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={handleKeyDown}
             className="flex-1 bg-transparent text-sm text-on-surface placeholder:text-secondary/50 focus:outline-none"
-            placeholder="Hi Arun, start out to code..."
+            placeholder=""
             autoComplete="off"
           />
         </form>

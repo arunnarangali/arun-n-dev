@@ -15,8 +15,8 @@ export const EditorView = ({ file, mode }: EditorViewProps) => {
   const isReadmeMarkdown = file?.kind === 'markdown' && file?.id === 'portfolio/README.md'
   return (
     <div className={[
-      'vscode-scrollbar h-full w-full min-w-0 overflow-x-hidden overflow-y-auto bg-surface',
-      layout === 'compact' ? 'p-4' : 'p-6',
+      'vscode-scrollbar @container h-full w-full min-w-0 overflow-x-hidden overflow-y-auto bg-surface',
+      layout === 'compact' ? 'p-2 @md:p-4' : 'p-4 @md:p-8',
     ].join(' ')}>
       {!file && (
         <div className="flex h-full items-center justify-center font-mono text-on-surface-variant">

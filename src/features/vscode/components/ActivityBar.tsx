@@ -24,38 +24,48 @@ export const ActivityBar = ({
   onOpenSettings,
 }: ActivityBarProps) => {
   return (
-    <aside className="flex w-12 flex-col items-center gap-4 border-r border-outline-variant bg-surface py-4">
-      {primaryActions.map(({ icon, view }) => {
-        const isExplorerIcon = view === 'explorer'
-        const isActive = activeView === view
-        const baseClasses = 'p-2 transition-all duration-150 ease-in-out'
-        const stateClasses = isActive
-          ? 'border-l-2 border-primary bg-surface-container-low text-on-surface'
-          : 'text-secondary/60 hover:bg-surface-container-high hover:text-on-surface'
-        const handler = isExplorerIcon ? onToggleExplorer : () => onSelectView(view)
-        return (
+    <aside className="flex w-12 flex-col items-center border-r border-outline-variant bg-surface py-2">
+      <div className="flex w-full flex-col items-center">
+        {primaryActions.map(({ icon, view }) => {
+          const isExplorerIcon = view === 'explorer'
+          const isActive = activeView === view
+          const handler = isExplorerIcon ? onToggleExplorer : () => onSelectView(view)
+          return (
+            <div key={icon} className="relative flex h-12 w-full items-center justify-center">
+              {isActive && (
+                <div className="absolute left-0 h-8 w-[2px] bg-primary" />
+              )}
+              <button
+                onClick={handler}
+                className={`flex h-10 w-10 items-center justify-center rounded-md transition-all duration-150 ${
+                  isActive 
+                    ? 'text-on-surface' 
+                    : 'text-on-surface-variant/60 hover:text-accent'
+                }`}
+              >
+                <Icon name={icon} className="text-[24px]" />
+              </button>
+            </div>
+          )
+        })}
+      </div>
+      <div className="mt-auto flex w-full flex-col items-center pb-2">
+        <div className="flex h-12 w-full items-center justify-center">
           <button
-            key={icon}
-            onClick={handler}
-            className={[baseClasses, stateClasses].join(' ')}
+            onClick={onOpenProfile}
+            className="flex h-10 w-10 items-center justify-center rounded-md text-on-surface-variant/60 transition-all duration-150 hover:text-accent"
           >
-            <Icon name={icon} />
+            <Icon name="account_circle" className="text-[24px]" />
           </button>
-        )
-      })}
-      <div className="mt-auto flex flex-col items-center gap-4">
-        <button
-          onClick={onOpenProfile}
-          className="p-2 text-secondary/60 transition-all duration-150 ease-in-out hover:bg-surface-container-high hover:text-on-surface"
-        >
-          <Icon name="account_circle" />
-        </button>
-        <button
-          onClick={onOpenSettings}
-          className="p-2 text-secondary/60 transition-all duration-150 ease-in-out hover:bg-surface-container-high hover:text-on-surface"
-        >
-          <Icon name="settings" />
-        </button>
+        </div>
+        <div className="flex h-12 w-full items-center justify-center">
+          <button
+            onClick={onOpenSettings}
+            className="flex h-10 w-10 items-center justify-center rounded-md text-on-surface-variant/60 transition-all duration-150 hover:text-accent"
+          >
+            <Icon name="settings" className="text-[24px]" />
+          </button>
+        </div>
       </div>
     </aside>
   )
