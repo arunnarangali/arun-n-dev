@@ -166,54 +166,57 @@ export const MacTitleBar = ({
     },
   ]
 
-  const buttonBase = 'flex h-7 w-7 shrink-0 items-center justify-center rounded transition-colors hover:bg-surface-container-high'
+  const buttonBase = 'flex h-6 w-6 shrink-0 items-center justify-center rounded transition-all hover:bg-surface-container-high/60 hover:text-accent'
 
   return (
-    <header className="relative flex h-9 w-full items-center justify-between border-b border-outline-variant bg-surface-container-low px-3 text-sm font-medium text-on-surface">
-      <div className="flex items-center gap-2">
-        <div className="flex gap-2 pr-4">
-          <span className="h-3 w-3 rounded-full bg-[#FF5F56]" />
-          <span className="h-3 w-3 rounded-full bg-[#FFBD2E]" />
-          <span className="h-3 w-3 rounded-full bg-[#27C93F]" />
+    <header className="relative flex h-9 w-full items-center justify-between border-b border-outline-variant bg-surface-container-low px-3 text-[12px] font-medium text-on-surface-variant">
+      <div className="flex items-center gap-4">
+        <div className="flex gap-2">
+          <span className="h-3 w-3 rounded-full bg-[#FF5F56] opacity-90" />
+          <span className="h-3 w-3 rounded-full bg-[#FFBD2E] opacity-90" />
+          <span className="h-3 w-3 rounded-full bg-[#27C93F] opacity-90" />
         </div>
-        <span className="font-headline text-xs tracking-tight text-on-surface/80">portfolio — Arun N</span>
+        <div className="group flex items-center gap-2 font-sans text-[11px] font-medium tracking-tight cursor-default">
+          <Icon name="terminal" className="text-[14px] transition-colors group-hover:text-accent" />
+          <span className="transition-colors group-hover:text-accent">portfolio — Arun N</span>
+        </div>
       </div>
-      <div className="flex items-center gap-2 text-primary/80">
+      <div className="flex items-center gap-1.5">
         <button
           onClick={onToggleTerminal}
-          className={`${buttonBase} ${isTerminalOpen ? 'text-on-surface' : ''}`}
+          className={`${buttonBase} ${isTerminalOpen ? 'text-primary' : ''}`}
           aria-pressed={isTerminalOpen}
           title={isTerminalOpen ? 'Hide terminal' : 'Show terminal'}
         >
-          <Icon name="terminal" />
+          <Icon name="terminal" className="text-[16px]" />
         </button>
         {splitToggle?.visible && (
           <button
             onClick={splitToggle.onToggle}
-            className={`${buttonBase} ${splitToggle.isSplit ? 'text-on-surface' : ''}`}
+            className={`${buttonBase} ${splitToggle.isSplit ? 'text-primary' : ''}`}
             aria-pressed={splitToggle.isSplit}
             title={splitToggle.isSplit ? 'Close split editor' : 'Split editor'}
           >
-            <Icon name="splitscreen" />
+            <Icon name="splitscreen" className="text-[16px]" />
           </button>
         )}
         <button
           onClick={onToggleEditorMode}
           disabled={!canTogglePreview}
-          className={`${buttonBase} ${canTogglePreview ? 'text-primary/80' : 'text-secondary/40'} ${editorMode === 'code' ? 'text-on-surface' : ''}`}
+          className={`${buttonBase} ${canTogglePreview ? 'text-on-surface-variant' : 'text-secondary/40'} ${editorMode === 'code' ? 'text-primary' : ''}`}
           title={canTogglePreview ? (editorMode === 'preview' ? 'View component code' : 'View live preview') : 'Code preview unavailable'}
         >
-          <Icon name={editorMode === 'preview' ? 'dock_to_right' : 'code'} />
+          <Icon name={editorMode === 'preview' ? 'dock_to_right' : 'code'} className="text-[16px]" />
         </button>
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen((open) => !open)}
-            className={`${buttonBase} ${isMenuOpen ? 'text-on-surface' : ''}`}
+            className={`${buttonBase} ${isMenuOpen ? 'text-primary' : ''}`}
             aria-expanded={isMenuOpen}
             aria-haspopup="menu"
             title="More actions"
           >
-            <Icon name="more_vert" />
+            <Icon name="more_vert" className="text-[16px]" />
           </button>
           {isMenuOpen && (
             <div className="absolute right-0 z-50 mt-2 w-64 rounded-lg border border-outline-variant bg-surface-container-high text-left shadow-2xl">
@@ -224,10 +227,10 @@ export const MacTitleBar = ({
                       onClick={() => {
                         item.action()
                       }}
-                      className={`flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-surface-container-lowest ${item.subtle ? 'font-normal tracking-normal text-on-surface/70' : ''
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-surface-container-lowest hover:text-accent ${item.subtle ? 'font-normal tracking-normal text-on-surface/70' : ''
                         }`}
                     >
-                      {item.icon && !item.subtle && <Icon name={item.icon} className="text-sm text-secondary" />}
+                      {item.icon && !item.subtle && <Icon name={item.icon} className="text-sm text-secondary transition-colors group-hover:text-accent" />}
                       <span>{item.label}</span>
                     </button>
                   </li>

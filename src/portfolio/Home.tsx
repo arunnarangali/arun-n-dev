@@ -1,40 +1,47 @@
-import { heroContent } from './content'
+import { motion } from 'framer-motion'
+import type { Variants } from 'framer-motion'
+import { HeroCard } from './components/home/HeroCard'
+import { CodeWindowCard } from './components/home/CodeWindowCard'
+import { DashboardCard } from './components/home/DashboardCard'
+import { ShipmentsCard } from './components/home/ShipmentsCard'
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+  },
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: [0.21, 0.47, 0.32, 0.98] },
+  },
+}
 
 export const HomeSection = () => {
   return (
-    <section className="mx-auto w-full max-w-7xl space-y-10 rounded-2xl border border-outline-variant bg-surface-container-low p-6 text-on-surface shadow-2xl shadow-black/40 md:p-10">
-      <div className="space-y-4">
-        <p className="text-xs uppercase tracking-[0.4em] text-on-surface-variant">Portfolio / Home.tsx</p>
-        <h1 className="text-4xl font-semibold leading-tight md:text-5xl">{heroContent.title}</h1>
-        <p className="max-w-3xl text-lg text-on-surface-variant">{heroContent.subtitle}</p>
+    <motion.section
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="relative mx-auto w-full max-w-7xl @container"
+    >
+      {/* ROW 1: Hero + Code Window */}
+      <div className="grid grid-cols-1 gap-6 @7xl:grid-cols-[65fr,35fr]">
+        <HeroCard variants={itemVariants} />
+        <CodeWindowCard variants={itemVariants} />
       </div>
 
-      <div className="flex flex-wrap gap-4">
-        {heroContent.ctas.map((cta) => (
-          <a
-            key={cta.label}
-            href={cta.href}
-            className={[
-              'inline-flex items-center rounded-full border px-5 py-2 text-sm font-semibold transition-all',
-              cta.variant === 'ghost'
-                ? 'border-outline-variant text-on-surface-variant hover:border-outline'
-                : 'border-transparent bg-emerald-500/90 text-black hover:bg-emerald-400',
-            ].join(' ')}
-          >
-            {cta.label}
-          </a>
-        ))}
+      {/* ROW 2: Dashboard + Shipments — full width */}
+      <div className="mt-6 grid grid-cols-1 gap-6 @7xl:grid-cols-2">
+        <DashboardCard variants={itemVariants} />
+        <ShipmentsCard variants={itemVariants} />
       </div>
-
-      <div className="grid gap-4 rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 md:grid-cols-3">
-        {heroContent.metrics.map((metric) => (
-          <div key={metric.label} className="space-y-1">
-            <div className="text-3xl font-bold text-emerald-400">{metric.value}</div>
-            <p className="text-sm uppercase tracking-[0.3em] text-on-surface-variant">{metric.label}</p>
-          </div>
-        ))}
-      </div>
-    </section>
+    </motion.section>
   )
 }
 

@@ -51,8 +51,8 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
 
   const wrapperClass =
     variant === 'overlay'
-      ? 'flex h-full w-full flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider'
-      : 'flex w-full flex-col bg-surface-container-low font-mono text-[11px] uppercase tracking-wider'
+      ? 'flex h-full w-full flex-col bg-surface-container-low font-sans text-[11px] tracking-tight'
+      : 'flex w-full flex-col bg-surface-container-low font-sans text-[11px] tracking-tight'
 
   const tree = useMemo(() => buildTree(files), [files])
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
@@ -82,10 +82,10 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
             }}
             className={[
               'flex w-full items-center justify-between text-left transition-colors',
-              isCompact ? 'py-0.5' : 'py-1',
-              isActive ? 'border-l-2 border-primary bg-surface-container-high text-on-surface' : 'text-secondary/70 hover:bg-surface-container-high hover:text-on-surface',
+              isCompact ? 'h-[22px]' : 'h-[24px]',
+              isActive ? 'bg-primary/10 text-primary' : 'text-on-surface-variant/80 hover:bg-surface-container-high hover:text-accent',
             ].join(' ')}
-            style={{ paddingLeft: `${depth * 16 + 24}px` }}
+            style={{ paddingLeft: `${depth * 8 + 20}px` }}
           >
             <span className="flex items-center gap-2">
               <Icon name={file.icon} className="text-[14px] text-primary" />
@@ -99,8 +99,8 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
         <div key={node.pathKey}>
           <button
             onClick={() => toggleFolder(node.pathKey)}
-            className="flex w-full items-center gap-2 px-4 py-1 text-left text-secondary/80 transition hover:text-on-surface"
-            style={{ paddingLeft: `${depth * 16 + 8}px` }}
+            className="flex h-[24px] w-full items-center gap-1.5 text-left text-on-surface-variant/80 transition hover:bg-surface-container-high hover:text-accent"
+            style={{ paddingLeft: `${depth * 8 + 8}px` }}
           >
             <Icon name={isExpanded ? 'expand_more' : 'chevron_right'} className="text-[14px]" />
             <span className="lowercase">{node.name}</span>
@@ -112,15 +112,15 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
 
   return (
     <aside className={[wrapperClass, isCompact ? 'text-[10px]' : 'text-[11px]'].join(' ')}>
-      <div className="flex items-center justify-between px-4 py-3 text-on-surface-variant">
-        <span className="font-bold">Explorer: Arun N Portfolio</span>
+      <div className="flex h-9 items-center justify-between px-4 text-on-surface-variant">
+        <span className="font-bold uppercase tracking-widest text-[10px]">Explorer</span>
         <Icon name="more_horiz" className="text-[14px]" />
       </div>
 
       <div>
-        <div className="flex items-center bg-surface-container-high px-2 py-1 text-on-surface">
+        <div className="flex h-6 items-center bg-surface-container-high/40 px-2 text-on-surface-variant">
           <Icon name="expand_more" className="mr-1 text-[14px]" />
-          <span className="font-bold">Open Editors</span>
+          <span className="font-bold uppercase tracking-widest text-[9px]">Open Editors</span>
         </div>
         <div className="vscode-scrollbar max-h-[78px] overflow-x-hidden overflow-y-auto pr-2">
           {openFiles.map((file) => (
@@ -131,7 +131,7 @@ export const Explorer = ({ files, openFiles, activeId, onSelect, variant = 'side
                 if (variant === 'overlay') onClose?.()
               }}
               className={[
-                'flex w-full items-center gap-2 px-6 text-left text-on-surface hover:bg-surface-container-high',
+                'flex w-full items-center gap-2 px-6 text-left text-on-surface hover:bg-surface-container-high/60 hover:text-accent',
                 isCompact ? 'h-5' : 'h-6',
               ].join(' ')}
             >

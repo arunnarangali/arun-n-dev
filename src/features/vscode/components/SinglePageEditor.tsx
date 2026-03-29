@@ -67,8 +67,8 @@ export const SinglePageEditor = forwardRef<SinglePageEditorHandle, SinglePageEdi
       <div
         ref={containerRef}
         className={[
-          'vscode-scrollbar h-full w-full min-w-0 overflow-x-hidden overflow-y-auto bg-surface',
-          layout === 'compact' ? 'p-4' : 'p-6',
+          'vscode-scrollbar @container h-full w-full min-w-0 overflow-x-hidden overflow-y-auto bg-surface',
+          layout === 'compact' ? 'p-4 @md:p-5' : 'p-6 @md:p-8',
         ].join(' ')}
       >
         <div className="space-y-10">

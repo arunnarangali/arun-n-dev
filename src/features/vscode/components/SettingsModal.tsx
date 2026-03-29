@@ -58,97 +58,99 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Settings" icon="settings">
-      <div className="space-y-4">
+      <div className="space-y-6 font-sans">
         <section>
-          <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Theme</h3>
+          <h3 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/50">Theme</h3>
           <div className="grid grid-cols-3 gap-2">
             {themes.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
-                className={`group flex flex-col items-center gap-1 rounded-lg border transition-all duration-300 hover:-translate-y-0.5 hover:shadow hover:shadow-black/10 ${theme === t.id
-                  ? 'border-accent/60 bg-accent/10 ring-1 ring-accent/20'
-                  : 'border-outline-variant/60 bg-surface-container-lowest hover:border-accent/40'
-                  } ${layout === 'compact' ? 'p-1.5' : 'p-2'}`}
+                className={`group flex flex-col items-center gap-1.5 rounded-md border transition-all ${theme === t.id
+                  ? 'border-primary bg-primary/10'
+                  : 'border-outline-variant/40 bg-surface-container-lowest/50 hover:border-accent/40 hover:bg-surface-container-low hover:text-accent'
+                  } ${layout === 'compact' ? 'p-2' : 'p-3'}`}
               >
-                <Icon name={t.icon} className="text-lg text-on-surface" />
-                <span className={layout === 'compact' ? 'text-[9px]' : 'text-[10px]'} text-on-surface>{t.label}</span>
-                {theme === t.id && <Icon name="check" className="text-accent text-[10px]" />}
+                <Icon name={t.icon} className={`text-[18px] transition-colors ${theme === t.id ? 'text-primary' : 'text-on-surface group-hover:text-accent'}`} />
+                <span className={`text-[10px] font-medium transition-colors ${theme === t.id ? 'text-primary' : 'text-on-surface group-hover:text-accent'}`}>{t.label}</span>
+                {theme === t.id && <div className="h-0.5 w-4 bg-primary rounded-full mt-0.5" />}
               </button>
             ))}
           </div>
         </section>
 
         <section>
-          <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Layout Mode</h3>
-          <div className="space-y-1.5">
+          <h3 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/50">Editor & Layout</h3>
+          <div className="flex flex-col border-t border-outline-variant/20 divide-y divide-outline-variant/20">
+            {/* Layout Toggle */}
             {layouts.map((l) => (
-              <button
+              <div 
                 key={l.id}
                 onClick={() => setLayout(l.id)}
-                className={`group flex w-full items-center justify-between rounded-lg border p-2 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow hover:shadow-black/10 ${layout === l.id
-                  ? 'border-accent/60 bg-accent/10 ring-1 ring-accent/20'
-                  : 'border-outline-variant/60 bg-surface-container-lowest hover:border-accent/40 hover:bg-surface-container-low'
-                  }`}
+                className="flex items-start justify-between py-3 cursor-pointer group"
               >
-                <div>
-                  <span className="text-[11px] text-on-surface">{l.label}</span>
-                  <p className="text-[9px] text-secondary/60">{l.description}</p>
+                <div className="pr-4">
+                  <span className={`text-[12px] font-bold transition-colors ${layout === l.id ? 'text-primary' : 'text-on-surface'}`}>
+                    {l.label}
+                  </span>
+                  <p className="text-[11px] text-on-surface-variant/60 leading-tight mt-0.5 transition-colors group-hover:text-accent/70">{l.description}</p>
                 </div>
-                <Icon
-                  name={layout === l.id ? 'radio_button_checked' : 'radio_button_unchecked'}
-                  className={layout === l.id ? 'text-accent' : 'text-secondary/40'}
-                />
-              </button>
+                <div className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-all ${
+                  layout === l.id ? 'border-primary bg-primary' : 'border-outline-variant/60 group-hover:border-accent/40'
+                }`}>
+                  {layout === l.id && <div className="h-1.5 w-1.5 rounded-full bg-on-primary" />}
+                </div>
+              </div>
             ))}
+
+            {/* Single Page Toggle */}
+            <div className="pt-3">
+              <div 
+                onClick={() => setPendingSinglePage(!singlePage)}
+                className="flex items-start justify-between cursor-pointer group pb-3"
+              >
+                <div className="pr-4">
+                  <span className={`text-[12px] font-bold transition-colors ${singlePage ? 'text-primary' : 'text-on-surface'}`}>
+                    Single page mode
+                  </span>
+                  <p className="text-[11px] text-on-surface-variant/60 leading-tight mt-0.5 transition-colors group-hover:text-accent/70">Scroll all sections; tabs follow automatically. Code is view-only.</p>
+                </div>
+                <div className={`mt-1 flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 transition-all ${
+                  singlePage ? 'bg-primary' : 'bg-surface-container-highest border border-outline-variant/40 group-hover:border-accent/40'
+                }`}>
+                  <div className={`h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${singlePage ? 'translate-x-3' : 'translate-x-0'}`} />
+                </div>
+              </div>
+
+              {pendingSinglePage !== null && (
+                <div className="mb-3 px-1">
+                  <SinglePageConfirmCallout
+                    pendingValue={pendingSinglePage}
+                    isApplying={isApplyingSinglePage}
+                    onCancel={() => setPendingSinglePage(null)}
+                    onConfirm={() => {
+                      if (pendingSinglePage === null) return
+                      setApplyingSinglePage(true)
+                      applyTimeoutRef.current = window.setTimeout(() => {
+                        setSinglePage(pendingSinglePage)
+                        setPendingSinglePage(null)
+                        setApplyingSinglePage(false)
+                        applyTimeoutRef.current = null
+                      }, 320)
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
         <section>
-          <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Editor</h3>
-          <button
-            onClick={() => setPendingSinglePage(!singlePage)}
-            className={`group flex w-full items-center justify-between rounded-lg border p-2 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow hover:shadow-black/10 ${singlePage
-              ? 'border-accent/60 bg-accent/10 ring-1 ring-accent/20'
-              : 'border-outline-variant/60 bg-surface-container-lowest hover:border-accent/40 hover:bg-surface-container-low'
-              }`}
-          >
-            <div>
-              <span className="text-[11px] text-on-surface">Single page</span>
-              <p className="text-[9px] text-secondary/60">Scroll all sections; tabs follow. Code is view-only.</p>
-            </div>
-            <Icon
-              name={singlePage ? 'toggle_on' : 'toggle_off'}
-              className={singlePage ? 'text-accent text-[20px]' : 'text-secondary/40 text-[20px]'}
-            />
-          </button>
-          {pendingSinglePage !== null && (
-            <SinglePageConfirmCallout
-              pendingValue={pendingSinglePage}
-              isApplying={isApplyingSinglePage}
-              onCancel={() => setPendingSinglePage(null)}
-              onConfirm={() => {
-                if (pendingSinglePage === null) return
-                setApplyingSinglePage(true)
-                applyTimeoutRef.current = window.setTimeout(() => {
-                  setSinglePage(pendingSinglePage)
-                  setPendingSinglePage(null)
-                  setApplyingSinglePage(false)
-                  applyTimeoutRef.current = null
-                }, 320)
-              }}
-            />
-          )}
-        </section>
-
-        <section>
-          <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary/70">Resume</h3>
-          <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-container px-3 py-2 text-[11px] font-medium text-on-primary transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary hover:shadow-md hover:shadow-primary/20">
-            <Icon name="download" className="text-[14px]" />
-            Download Resume (PDF)
+          <button className="flex w-full items-center justify-center gap-2 rounded-md bg-primary-container h-10 text-[11px] font-bold text-on-primary transition-all hover:bg-primary border border-primary/20">
+            <Icon name="download" className="text-[16px]" />
+            DOWNLOAD RESUME (PDF)
           </button>
         </section>
-
       </div>
     </Modal>
   )
