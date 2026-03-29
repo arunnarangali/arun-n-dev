@@ -1,4 +1,4 @@
-# Arun Narangali – Portfolio Workspace(Guide)
+# Play with my Portfolio — Discover What's Inside!
 
 Welcome to my portfolio workspace. Each file represents a focused area of my experience, and each tab shows how I approach delivery and impact.
 Browse through the sections to understand my skills, projects, and the outcomes I have helped teams achieve.
