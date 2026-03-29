@@ -146,10 +146,14 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
         </section>
 
         <section>
-          <button className="flex w-full items-center justify-center gap-2 rounded-md bg-primary-container h-10 text-[11px] font-bold text-on-primary transition-all hover:bg-primary border border-primary/20">
+          <a
+            href="ArunCV.pdf"
+            download="Arun_N_Resume.pdf"
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-primary-container h-10 text-[11px] font-bold text-on-primary transition-all hover:bg-primary border border-primary/20 no-underline"
+          >
             <Icon name="download" className="text-[16px]" />
             DOWNLOAD RESUME (PDF)
-          </button>
+          </a>
         </section>
       </div>
     </Modal>

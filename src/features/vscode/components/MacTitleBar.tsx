@@ -102,7 +102,7 @@ export const MacTitleBar = ({
   }
 
   const handleDownloadResume = () => {
-    openExternal('/ArunCV.pdf')
+    openExternal('ArunCV.pdf')
   }
 
   const handleShare = async () => {
