@@ -2,6 +2,7 @@ import { motion, type Variants } from 'framer-motion'
 import { Icon } from '../../../features/vscode/components/Icon'
 import profileImg from '../../../assets/hero.png'
 import { aboutContent, allSkills, heroContent } from '../../content'
+import { SkillChip } from '../SkillChip'
 
 type DashboardCardProps = {
   variants: Variants
@@ -40,7 +41,9 @@ export const DashboardCard = ({ variants }: DashboardCardProps) => {
           <h3 className="text-xl font-black tracking-tight @3xl:text-2xl">{aboutContent.name}</h3>
           <div className="flex flex-wrap justify-center gap-1">
             {previewSkills.map((tag) => (
-              <span key={tag} className="rounded-md bg-surface-container-highest/60 px-2 py-0.5 text-[9px] font-bold text-on-surface-variant/70 hover:bg-accent/20 hover:text-accent transition-colors">{tag}</span>
+              <span key={tag} className="rounded-md bg-surface-container-highest/60 px-2 py-0.5 text-[9px] font-bold text-on-surface-variant/70 hover:bg-accent/20 hover:text-accent transition-colors">
+                <SkillChip label={tag} />
+              </span>
             ))}
             <a href="#skills" className="inline-flex items-center gap-0.5 rounded-md bg-primary/10 px-2 py-0.5 text-[9px] font-bold text-primary hover:text-accent hover:bg-accent/10 transition-colors">
               +{allSkills.length - 5} more

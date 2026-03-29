@@ -1,6 +1,7 @@
 import { motion, type Variants } from 'framer-motion'
 import { highlightText } from '../../../features/vscode/utils/highlight'
 import { useSettings } from '../../../features/vscode/state/useSettings'
+import { SkillChip } from '../SkillChip'
 
 type SkillGroup = {
   label: string
@@ -42,7 +43,7 @@ export const SkillGroupCard = ({ group, query, variants }: SkillGroupCardProps) 
               key={item}
               className="rounded-lg border border-outline-variant/30 bg-surface-container-high/30 px-3 py-1.5 text-xs font-medium text-primary/90 transition-all hover:bg-accent/10 hover:text-accent"
             >
-              {highlightText(item, query)}
+              <SkillChip label={item} />
             </span>
           ))}
         </div>

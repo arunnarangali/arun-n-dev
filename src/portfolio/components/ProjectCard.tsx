@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { highlightText } from '../../features/vscode/utils/highlight'
 import type { ProjectCard as ProjectCardType } from '../content'
+import { SkillChip } from './SkillChip'
 
 type ProjectCardProps = {
   project: ProjectCardType
@@ -41,7 +42,7 @@ export const ProjectCard = ({ project, query, index }: ProjectCardProps) => {
               key={tech}
               className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary/90 transition-colors group-hover:bg-accent/10 group-hover:text-accent"
             >
-              {highlightText(tech, query)}
+              <SkillChip label={tech} />
             </span>
           ))}
         </div>
