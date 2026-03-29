@@ -46,14 +46,6 @@ export const ProjectCard = ({ project, query, index }: ProjectCardProps) => {
             </span>
           ))}
         </div>
-        <motion.a
-          href={project.href}
-          whileHover={{ x: 5 }}
-          className="mt-auto flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-primary hover:text-accent transition-colors"
-        >
-          View System Playbook 
-          <span className="text-lg">→</span>
-        </motion.a>
       </div>
     </motion.article>
   )

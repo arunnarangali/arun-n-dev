@@ -412,7 +412,7 @@ export const VSCodePortfolio = () => {
         splitOne.setSize(Math.max(MIN_EDITOR_PANE, newAvailable / 2))
       }
     },
-    [SPLITTER_WIDTH, currentFile?.id, editorGroups, fallbackFileId, editorWidth, splitOne],
+    [SPLITTER_WIDTH, currentFile?.id, editorGroups, fallbackFileId, editorWidth, splitOne, MIN_EDITOR_PANE],
   )
 
   const handlePrimarySplitToggle = useCallback(() => {
@@ -428,7 +428,7 @@ export const VSCodePortfolio = () => {
     const first = Math.min(Math.max(MIN_EDITOR_PANE, splitOne.size), maxFirst)
     const second = Math.max(MIN_EDITOR_PANE, availableWidth - first)
     return [first, second]
-  }, [availableWidth, editorGroups.groupCount, splitOne.size])
+  }, [availableWidth, editorGroups.groupCount, splitOne.size, MIN_EDITOR_PANE])
 
   const visibleGroups = useMemo(() => Array.from({ length: editorGroups.groupCount }, (_, index) => index as EditorGroupId), [editorGroups.groupCount])
 

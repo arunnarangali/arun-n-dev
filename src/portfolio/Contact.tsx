@@ -30,7 +30,7 @@ export const ContactSection = () => {
       whileInView="visible"
       viewport={{ once: true, margin: '-100px' }}
       variants={containerVariants}
-      className="mx-auto grid w-full max-w-7xl gap-8 rounded-[2.5rem] border border-outline-variant bg-surface-container-low p-8 text-on-surface shadow-2xl @container @6xl:grid-cols-2 @5xl:p-14"
+      className="mx-auto grid w-full max-w-7xl gap-8 rounded-3xl border border-outline-variant bg-surface-container-low p-5 text-on-surface shadow-2xl @container @sm:p-8 @sm:rounded-[2.5rem] @6xl:grid-cols-2 @5xl:p-14"
     >
       <ContactFormCard variants={itemVariants} />
       <DirectChannelsCard variants={itemVariants} />

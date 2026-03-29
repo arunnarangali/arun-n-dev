@@ -17,7 +17,7 @@ export const ContactFormCard = ({ variants }: ContactFormCardProps) => {
         </p>
         <h2
           className={[
-            'text-4xl font-black tracking-tight @5xl:text-5xl transition-colors',
+            'text-2xl font-black tracking-tight @xs:text-3xl @sm:text-4xl @5xl:text-5xl transition-colors',
             isLight ? 'text-on-surface group-hover:text-primary' : 'text-on-surface',
           ].join(' ')}
         >

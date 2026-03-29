@@ -31,7 +31,7 @@ export const HomeSection = () => {
       className="relative mx-auto w-full max-w-7xl @container"
     >
       {/* ROW 1: Hero + Code Window */}
-      <div className="grid grid-cols-1 gap-6 @7xl:grid-cols-[65fr,35fr]">
+      <div className="grid grid-cols-1 gap-6 @7xl:grid-cols-[70fr,30fr]">
         <HeroCard variants={itemVariants} />
         <CodeWindowCard variants={itemVariants} />
       </div>

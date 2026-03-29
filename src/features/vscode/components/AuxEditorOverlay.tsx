@@ -71,7 +71,7 @@ export const AuxEditorOverlay = ({
       >
         <div className="relative flex h-6 items-center justify-center">
           <div
-            className={`h-1.5 w-12 touch-none rounded-full bg-outline/50 transition-opacity ${viewerResize.isResizing ? 'opacity-100' : 'opacity-70'}`}
+            className={`h-1.5 w-48 touch-none rounded-full bg-outline/50 transition-opacity ${viewerResize.isResizing ? 'opacity-100' : 'opacity-70'}`}
             {...viewerResize.getHandleProps()}
             aria-label="Resize viewer"
           />

@@ -353,7 +353,7 @@ export const TerminalPanel = ({
           appendLine(`Command not found: ${base}`, 'output')
       }
     },
-    [appendLine, appendLines, clearTerminal, copyToClipboard, layoutOptions, links.github, links.linkedin, links.repo, onOpenFile, openFile, openLink, portfolioUrl, setLayout, setTheme, themeOptions],
+    [appendLine, appendLines, clearTerminal, copyToClipboard, links.github, links.linkedin, links.repo, openFile, openLink, portfolioUrl, setLayout, setTheme],
   )
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -412,7 +412,7 @@ export const TerminalPanel = ({
       {!isMobile && (
         <div className="relative hidden h-3 md:block">
           <div
-            className={`absolute left-1/2 top-1/2 h-1 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-outline/40 transition-opacity ${terminalResize.isResizing ? 'opacity-100' : 'opacity-0 group-hover/terminal:opacity-100'
+            className={`absolute left-1/2 top-1/2 h-1 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-outline/40 transition-opacity ${terminalResize.isResizing ? 'opacity-100' : 'opacity-0 group-hover/terminal:opacity-100'
               }`}
             {...terminalResize.getHandleProps()}
           />
