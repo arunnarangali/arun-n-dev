@@ -10,7 +10,7 @@ export const DirectChannelsCard = ({ variants }: DirectChannelsCardProps) => {
   const { theme } = useSettings()
   const isLight = theme === 'light'
   return (
-    <motion.div variants={variants} className="group flex flex-col justify-between space-y-8 rounded-[2rem] border border-outline-variant/50 bg-surface-container-lowest/30 p-8 @5xl:p-12">
+    <motion.div variants={variants} className="group min-w-0 flex flex-col justify-between space-y-8 rounded-[2rem] border border-outline-variant/50 bg-surface-container-lowest/30 p-4 @sm:p-8 @5xl:p-12">
       <div className="space-y-8">
         <h3
           className={[
@@ -32,7 +32,7 @@ export const DirectChannelsCard = ({ variants }: DirectChannelsCardProps) => {
                 >
                   {link.label}
                 </p>
-                <p className="font-medium text-on-surface group-hover:text-primary transition-colors">{link.value}</p>
+                <p className="break-all font-medium text-on-surface group-hover:text-primary transition-colors">{link.value}</p>
               </div>
               <motion.a
                 href={link.href}
@@ -46,7 +46,7 @@ export const DirectChannelsCard = ({ variants }: DirectChannelsCardProps) => {
         </ul>
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest/50 p-6 text-sm text-on-surface-variant/80">
+      <div className="min-w-0 space-y-4 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest/50 p-4 @sm:p-6 text-sm text-on-surface-variant/80">
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 animate-pulse rounded-full bg-accent shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
           <p className="font-bold tracking-tight">System Status: Accepting Strategic Engagements</p>
