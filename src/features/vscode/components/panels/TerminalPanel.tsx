@@ -3,6 +3,7 @@ import type { PortfolioFile } from '../../data/files'
 import type { Layout, Theme } from '../../state/useSettings'
 import { Icon } from '../Icon'
 import { aboutContent, experiences, heroContent, projects, skillGroups } from '../../../../portfolio/content'
+import { analyzeJobFit, formatJobFitReport } from '../../../../portfolio/jobFit'
 import { useResizablePanel } from '../../hooks/useResizablePanel'
 
 type TerminalPanelProps = {
@@ -232,6 +233,7 @@ export const TerminalPanel = ({
               '- experience · Show recent roles',
               '- skills · List core stacks',
               '- projects · Highlight current builds',
+              '- fit <job description> · Check skill fit for a role',
               '- update · Fetch build + status logs',
               '- install · Simulate dependency sync',
               '- url | copy url · Share portfolio link',
@@ -269,6 +271,13 @@ export const TerminalPanel = ({
             projects.slice(0, 2).map((project) => `${project.title} — ${project.summary}`),
             'output',
           )
+          break
+        case 'fit':
+          if (!arg) {
+            appendLine('Usage: fit <job description or skills>', 'output')
+            break
+          }
+          appendLines(formatJobFitReport(analyzeJobFit(arg)), 'output')
           break
         case 'update':
           appendLines(

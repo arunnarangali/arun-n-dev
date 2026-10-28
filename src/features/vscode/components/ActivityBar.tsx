@@ -5,6 +5,7 @@ const primaryActions: Array<{ icon: string; view: WorkbenchView }> = [
   { icon: 'content_copy', view: 'explorer' },
   { icon: 'search', view: 'search' },
   { icon: 'account_tree', view: 'sourceControl' },
+  { icon: 'bug_report', view: 'runDebug' },
   { icon: 'extension', view: 'extensions' },
 ]
 

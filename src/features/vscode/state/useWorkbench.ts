@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 
-export type WorkbenchView = 'explorer' | 'search' | 'sourceControl' | 'extensions' | 'settings' | 'account'
+export type WorkbenchView = 'explorer' | 'search' | 'sourceControl' | 'runDebug' | 'extensions' | 'settings' | 'account'
 
 const VIEW_STORAGE_KEY = 'vscode-active-view'
 
-const allowedViews: WorkbenchView[] = ['explorer', 'search', 'sourceControl', 'extensions', 'settings', 'account']
+const allowedViews: WorkbenchView[] = ['explorer', 'search', 'sourceControl', 'runDebug', 'extensions', 'settings', 'account']
 
 export const useWorkbench = () => {
   const [activeView, setActiveView] = useState<WorkbenchView>(() => {

@@ -21,12 +21,14 @@ Browse through the sections to understand my skills, projects, and the outcomes 
   - Search: global content search
   - Source Control: career journey + changelog
   - Extensions: skill/tool cards
+  - Run & Debug: job-fit analyzer (paste a JD, get a fit score, jump to matching files)
 
 - **Left Panel**
   - **Explorer** lists all portfolio files and active tabs
   - **Search** shows results across projects, skills, and experience
   - **Source Control** shows career journey + changelog
   - **Extensions** shows tools and proficiency badges
+  - **Run & Debug** runs a job-fit analysis and shows breakpoints you can jump to
 
 - **Editor Area**
   - Tabs for open files
@@ -49,6 +51,7 @@ Browse through the sections to understand my skills, projects, and the outcomes 
 - **Command Palette**: `Cmd/Ctrl+Shift+P`, filter commands, navigate with ↑/↓, run with Enter
 - **Close Palette**: `Esc`
 - **Quick Shortcuts**: `Cmd/Ctrl+Shift+Alt+F` (Find), `Cmd/Ctrl+Shift+Alt+T` (Theme), `Ctrl+`` (Terminal), `Cmd/Ctrl+Shift+Alt+B` (Toggle Sidebar), `Cmd/Ctrl+Shift+Alt+L` (Format)
+- **Job Fit**: use `Debug: Start Job Fit` from the Command Palette to open Run & Debug
 - **Note**: Some VS Code defaults are browser-reserved; web-safe equivalents are listed here.
 - **Preview ↔ Code**: toggle from the top bar or editor group
 - **Split Editor**: desktop-only split from the top bar
@@ -84,6 +87,7 @@ github
 linkedin
 repo
 resume
+fit <job description>
 ```
 
 ---
@@ -110,6 +114,20 @@ resume
 - **Share or Copy Portfolio**
   - Title bar menu → “Copy Portfolio URL” or “Share Portfolio”
   - Terminal command: `url` or `copy url`
+
+---
+
+## 🔍 Job Fit (Run & Debug)
+
+Paste a job description into the **Run & Debug** panel (Activity Bar → `bug_report` icon) and press **Launch: Job Fit**. You'll get:
+
+- **Fit score** — percentage of recognized requirements your portfolio covers
+- **Matched skills** — linked to portfolio files where they appear
+- **Missing skills** — tech terms found in the JD that your portfolio doesn't cover yet
+- **Breakpoints** — clickable jumps to the exact file + line where each skill is demonstrated
+- **Copy report** — copy the full analysis to your clipboard
+
+You can also run it from the **Terminal** with `fit <job description>`, or open it from the **Command Palette** via `Debug: Start Job Fit`.
 
 ---
 

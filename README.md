@@ -9,6 +9,7 @@ A VS Code-inspired portfolio that presents each section as a “file” inside a
 - Terminal-style commands for quick actions
 - Theme and layout switching (Dark/Light/High Contrast, Compact/Comfortable)
 - Split editor on desktop for side-by-side views
+- **Run & Debug (Job Fit)**: paste a job description to get a skill fit score, matched/missing skills, breakpoints to portfolio files, and a copyable report
 
 ## Tech Stack
 
@@ -16,10 +17,11 @@ A VS Code-inspired portfolio that presents each section as a “file” inside a
 - Vite 8
 - Tailwind CSS + PostCSS
 - ESLint
+- Vitest (testing)
 
 ## Requirements
 
-- Node.js 18.18+ (LTS recommended)
+- Node.js 18.18+ for the app; Node.js 22.12+ is required to run the Vitest 5 test suite
 - npm 9+ (or any npm-compatible package manager)
 
 ## Getting Started
@@ -37,6 +39,7 @@ Open `http://localhost:5173` in your browser.
 - `npm run build` — typecheck and build for production
 - `npm run preview` — preview the production build
 - `npm run lint` — run ESLint
+- `npm run test` — run vitest suite
 
 ## Folder Structure
 
@@ -87,6 +90,8 @@ Open `http://localhost:5173` in your browser.
 - `src/portfolio/changelog.ts` — career journey + changelog entries
 - `src/portfolio/extensions.ts` — Extensions panel cards
 - `src/portfolio/searchIndex.ts` — global search matching
+- `src/portfolio/jobFit.ts` — job description skill-fit analysis (matched/missing skills, score, breakpoints)
+- `src/portfolio/jobFit.test.ts` — vitest cases for the Job Fit analyzer
 
 ## Design Principles
 

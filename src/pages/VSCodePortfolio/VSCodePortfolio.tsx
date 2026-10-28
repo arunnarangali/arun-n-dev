@@ -347,6 +347,9 @@ export const VSCodePortfolio = () => {
         case 'open-theme':
           setSettingsOpen(true)
           break
+        case 'start-job-fit':
+          workbench.openView('runDebug')
+          break
         case 'focus-terminal':
           setTerminalOpen(true)
           setTerminalFocusSignal((signal) => signal + 1)

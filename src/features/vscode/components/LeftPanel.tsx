@@ -3,6 +3,7 @@ import { Icon } from './Icon'
 import { SearchPanel } from './panels/SearchPanel'
 import { SourceControlPanel } from './panels/SourceControlPanel'
 import { ExtensionsPanel } from './panels/ExtensionsPanel'
+import { RunDebugPanel } from './panels/RunDebugPanel'
 import type { PortfolioFile } from '../data/files'
 
 type LeftPanelProps = {
@@ -18,6 +19,7 @@ type LeftPanelProps = {
 const overlayTitles: Record<string, string> = {
   search: 'SEARCH',
   sourceControl: 'SOURCE CONTROL',
+  runDebug: 'RUN AND DEBUG',
   extensions: 'EXTENSIONS',
 }
 
@@ -29,6 +31,9 @@ export const LeftPanel = ({ view, files, openFiles, activeId, onSelectFile, vari
     }
     if (view === 'sourceControl') {
       return <SourceControlPanel variant={variant} />
+    }
+    if (view === 'runDebug') {
+      return <RunDebugPanel onSelect={onSelectFile} variant={variant} onClose={onClose} />
     }
     if (view === 'extensions') {
       return <ExtensionsPanel variant={variant} />
