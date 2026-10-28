@@ -4,17 +4,38 @@
 requests from browsers, and because the API key must not be in the website code.
 
 - **Local:** nothing to do. `npm run dev` runs `chat.ts` inside Vite using `OLLAMA_API_KEY` and `OWNER_PASSCODE` from `.env.local`.
-- **Live site:** deploy it once to Cloudflare (free):
+- **Live site:** deployed automatically from GitHub on every push to `main` (the `deploy-worker` job in `.github/workflows/deploy.yml`).
+
+> Never add `OLLAMA_API_KEY` or `OWNER_PASSCODE` to the website build (no Pages build env, no `VITE_` variable). Anything in the static site is public. They only go to Cloudflare as Worker secrets.
+
+## Deploy from GitHub (one-time setup)
+
+1. **Cloudflare** (free account):
+   - My Profile → API Tokens → Create Token → template **"Edit Cloudflare Workers"** → copy the token.
+   - Workers & Pages → copy your **Account ID** (right-hand side).
+2. **GitHub** → your repo → **Settings → Secrets and variables → Actions → New repository secret**. Add:
+
+   | Secret | Value |
+   | --- | --- |
+   | `CLOUDFLARE_API_TOKEN` | the token from step 1 |
+   | `CLOUDFLARE_ACCOUNT_ID` | the account ID from step 1 |
+   | `OLLAMA_API_KEY` | your key from ollama.com/settings/keys |
+   | `OWNER_PASSCODE` | the access code JARVIS asks for (use a new, strong one) |
+
+3. **Push to `main`** (or re-run the latest workflow). Open **Actions → Deploy to GitHub Pages → deploy-worker** and copy the `https://arun-portfolio-chat.<subdomain>.workers.dev` URL from the log.
+4. Paste that URL into `PRODUCTION_CHAT_URL` in `src/portfolio/ai/chatClient.ts` and push again. Only needed once.
+
+After that, every push to `main` redeploys the Worker with the current secrets. To change the key or passcode, update the GitHub secret and re-run the workflow. Until `CLOUDFLARE_API_TOKEN` is set, the job is skipped with a notice and the site deploys as usual.
+
+### Manual alternative
 
 ```bash
 cd worker
+npx wrangler login
 npx wrangler secret put OLLAMA_API_KEY
 npx wrangler secret put OWNER_PASSCODE   # the code JARVIS asks for to unlock owner mode
 npx wrangler deploy
 ```
-
-Paste the printed `https://….workers.dev` URL into `PRODUCTION_CHAT_URL` in
-`src/portfolio/ai/chatClient.ts`, then push.
 
 ## What it handles
 

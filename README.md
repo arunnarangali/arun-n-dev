@@ -164,4 +164,6 @@ npm run preview
 
 Host the `dist/` folder on any static hosting provider (Netlify, Vercel, GitHub Pages, etc.).
 
-The AI chat needs the proxy deployed separately, because a static site can't keep the API key secret. Deploy `worker/` to Cloudflare once (free) and paste its URL into `PRODUCTION_CHAT_URL` in `src/portfolio/ai/chatClient.ts`. Steps are in `worker/README.md`. Redeploy the Worker whenever `worker/chat.ts` or the prompts change.
+Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the site for GitHub Pages and deploys the AI chat proxy (`worker/`) to Cloudflare.
+
+The chat needs a few GitHub **repository secrets** (Settings → Secrets and variables → Actions): `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `OLLAMA_API_KEY` and `OWNER_PASSCODE`. They go only to the Cloudflare Worker, never into the site build, because anything in a static site is public. After the first deploy, paste the Worker URL into `PRODUCTION_CHAT_URL` in `src/portfolio/ai/chatClient.ts`. Step-by-step setup is in `worker/README.md`.
