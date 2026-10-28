@@ -31,6 +31,8 @@ export const commandItems: CommandItem[] = [
     icon: "shield_person",
     label: "Chat: Unlock Owner Mode",
   },
+  { id: "chat-find-jobs", icon: "work", label: "Chat: Find Matching Jobs" },
+  { id: "chat-applications", icon: "task_alt", label: "Chat: Show Applications" },
   {
     id: "focus-terminal",
     icon: "terminal",

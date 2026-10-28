@@ -26,6 +26,11 @@ export const slashCommands: SlashCommand[] = [
     description: "How to get in touch",
     prompt: "How can I get in touch?",
   },
+  { name: "jobs", description: "Find job openings that fit you (owner)" },
+  {
+    name: "applied",
+    description: "Jobs you applied to, with CSV export (owner)",
+  },
   { name: "clear", description: "Start a new chat" },
   { name: "owner", description: "Unlock owner mode (JARVIS)" },
   { name: "public", description: "Lock owner mode" },
@@ -33,7 +38,7 @@ export const slashCommands: SlashCommand[] = [
 
 export type ParsedInput =
   | { kind: "prompt"; text: string }
-  | { kind: "command"; name: string };
+  | { kind: "command"; name: string; args?: string };
 
 // Turns `/skills` into its prompt, `/skills react` into the prompt plus extra text,
 // and leaves panel actions like `/clear` for the caller.
@@ -45,8 +50,11 @@ export const parseChatInput = (raw: string): ParsedInput => {
     (entry) => entry.name === match[1].toLowerCase(),
   );
   if (!command) return { kind: "prompt", text };
-  if (!command.prompt) return { kind: "command", name: command.name };
   const extra = match[2].trim();
+  if (!command.prompt)
+    return extra
+      ? { kind: "command", name: command.name, args: extra }
+      : { kind: "command", name: command.name };
   return {
     kind: "prompt",
     text: extra ? `${command.prompt} ${extra}` : command.prompt,

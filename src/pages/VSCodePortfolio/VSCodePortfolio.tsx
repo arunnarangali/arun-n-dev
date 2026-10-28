@@ -395,6 +395,12 @@ export const VSCodePortfolio = () => {
         case 'chat-owner-mode':
           openChat('/owner')
           break
+        case 'chat-find-jobs':
+          openChat('/jobs')
+          break
+        case 'chat-applications':
+          openChat('/applied')
+          break
         case 'format-document':
           if (currentFile && currentMode === 'code') {
             pushCommandFeedback('Document formatted.')

@@ -23,6 +23,11 @@ Browse through the sections to understand my skills, projects, and the outcomes 
   - Extensions: skill/tool cards
   - Run & Debug: job-fit analyzer (paste a JD, get a fit score, jump to matching files)
 
+- **Copilot Chat** (right side panel)
+  - Ask anything about my projects, skills and experience
+  - Answers come from this portfolio only and can open the matching file
+  - Follow-up questions work: "tell me more about the second one", "why?"
+
 - **Left Panel**
   - **Explorer** lists all portfolio files and active tabs
   - **Search** shows results across projects, skills, and experience
@@ -52,6 +57,7 @@ Browse through the sections to understand my skills, projects, and the outcomes 
 - **Close Palette**: `Esc`
 - **Quick Shortcuts**: `Cmd/Ctrl+Shift+Alt+F` (Find), `Cmd/Ctrl+Shift+Alt+T` (Theme), `Ctrl+`` (Terminal), `Cmd/Ctrl+Shift+Alt+B` (Toggle Sidebar), `Cmd/Ctrl+Shift+Alt+L` (Format)
 - **Job Fit**: use `Debug: Start Job Fit` from the Command Palette to open Run & Debug
+- **Copilot Chat**: `Ctrl+Alt+I`, the chat icon in the title bar or status bar, or `Chat: Open Copilot Chat` in the Command Palette
 - **Note**: Some VS Code defaults are browser-reserved; web-safe equivalents are listed here.
 - **Preview ↔ Code**: toggle from the top bar or editor group
 - **Split Editor**: desktop-only split from the top bar
@@ -67,6 +73,7 @@ Browse through the sections to understand my skills, projects, and the outcomes 
 - **Focus Terminal**: `Ctrl+``
 - **Toggle Sidebar**: `Cmd/Ctrl+Shift+Alt+B`
 - **Format Document**: `Cmd/Ctrl+Shift+Alt+L`
+- **Copilot Chat**: `Ctrl+Alt+I`
 
 ---
 
@@ -88,6 +95,7 @@ linkedin
 repo
 resume
 fit <job description>
+ask <question>
 ```
 
 ---
@@ -128,6 +136,20 @@ Paste a job description into the **Run & Debug** panel (Activity Bar → `bug_re
 - **Copy report** — copy the full analysis to your clipboard
 
 You can also run it from the **Terminal** with `fit <job description>`, or open it from the **Command Palette** via `Debug: Start Job Fit`.
+
+---
+
+## 🤖 Copilot Chat
+
+Open the chat and ask about me the way you'd ask a teammate: "Which projects use Golang?", "Is Arun a good fit for a senior React role?", "How can I get in touch with Arun?".
+
+- **Slash commands**: `/projects`, `/skills`, `/experience`, `/contact`, `/clear` (type `/` to see them)
+- **Follow-ups**: keep asking; the chat remembers the conversation
+- **Links**: answers link to portfolio files, which open as editor tabs
+- **Terminal**: `ask <question>` sends a question straight to the chat
+- **Owner mode**: a private, passcode-protected assistant for me (job search, cover letters, application tracking)
+
+AI answers can make mistakes; for anything important, contact me directly.
 
 ---
 

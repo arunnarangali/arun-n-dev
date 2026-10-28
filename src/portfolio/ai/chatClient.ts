@@ -1,4 +1,6 @@
 import type { ChatMode } from "./systemPrompt";
+import type { JobSearchResult } from "./jobs";
+import type { CoverLetterTarget } from "./coverLetter";
 
 export type ChatRole = "user" | "assistant";
 
@@ -6,6 +8,14 @@ export type ChatMessage = {
   id: string;
   role: ChatRole;
   content: string;
+  // Set on job finder answers; `content` then holds a one-line summary for the model.
+  jobs?: JobSearchResult;
+  // Set on cover letters drafted from a job card; enables "Send now".
+  coverLetter?: CoverLetterTarget;
+  // Tracker message from /applied; the model gets it as a list of applications.
+  applications?: true;
+  // The answer was stopped or failed mid-stream.
+  incomplete?: true;
 };
 
 // Paste your Cloudflare Worker URL here after `npx wrangler deploy` (see worker/README.md),
@@ -19,9 +29,16 @@ export const CHAT_API_URL = import.meta.env.DEV
 
 export class ChatRequestError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  // Seconds until the server accepts the request again, when it says so.
+  retryAfter: number;
+  // True when Ollama's web-search quota ran out, which blocks every search; false for
+  // limits that only apply to this visitor.
+  quota: boolean;
+  constructor(message: string, status: number, retryAfter = 0, quota = false) {
     super(message);
     this.status = status;
+    this.retryAfter = retryAfter;
+    this.quota = quota;
   }
 }
 
@@ -100,6 +117,72 @@ export const verifyOwner = async (passcode: string): Promise<VerifyResult> => {
   }
 };
 
+// Turns a failed response into a ChatRequestError, keeping the Worker's message and
+// any retry details.
+const requestError = async (response: Response) => {
+  let message = `Chat is unavailable right now (${response.status}).`;
+  let retryAfter = 0;
+  let quota = false;
+  try {
+    const data = (await response.json()) as {
+      error?: string;
+      retryAfter?: number;
+      quota?: boolean;
+    };
+    if (data.error) message = data.error;
+    if (typeof data.retryAfter === "number") retryAfter = data.retryAfter;
+    quota = data.quota === true;
+  } catch {
+    // Non-JSON error page, e.g. no chat backend on a static host.
+  }
+  return new ChatRequestError(message, response.status, retryAfter, quota);
+};
+
+// Owner only: searches the web for openings and returns structured listings.
+export const findJobs = async ({
+  query,
+  passcode,
+  fresh = false,
+  signal,
+}: {
+  query: string;
+  passcode: string;
+  fresh?: boolean;
+  signal?: AbortSignal;
+}): Promise<JobSearchResult> => {
+  if (!CHAT_API_URL)
+    throw new ChatRequestError("Chat isn't set up on this site yet.", 503);
+  const response = await fetch(CHAT_API_URL, {
+    method: "POST",
+    headers: requestHeaders(passcode),
+    body: JSON.stringify({ jobs: fresh ? { query, fresh } : { query } }),
+    signal,
+  });
+  if (!response.ok) throw await requestError(response);
+  return (await response.json()) as JobSearchResult;
+};
+
+export type HrEmailResult = { email: string; source: string; cached?: boolean };
+
+// Owner only: one web search for the company's HR/careers address.
+export const findHrEmail = async ({
+  company,
+  passcode,
+}: {
+  company: string;
+  passcode: string;
+}): Promise<HrEmailResult> => {
+  if (!CHAT_API_URL)
+    throw new ChatRequestError("Chat isn't set up on this site yet.", 503);
+  const response = await fetch(CHAT_API_URL, {
+    method: "POST",
+    headers: requestHeaders(passcode),
+    body: JSON.stringify({ hrEmail: { company } }),
+  });
+  if (!response.ok) throw await requestError(response);
+  return (await response.json()) as HrEmailResult;
+};
+
 export async function* streamChat({
   messages,
   mode,
@@ -118,16 +201,7 @@ export async function* streamChat({
     signal,
   });
 
-  if (!response.ok || !response.body) {
-    let message = `Chat is unavailable right now (${response.status}).`;
-    try {
-      const data = (await response.json()) as { error?: string };
-      if (data.error) message = data.error;
-    } catch {
-      // Non-JSON error page, e.g. no chat backend on a static host.
-    }
-    throw new ChatRequestError(message, response.status);
-  }
+  if (!response.ok || !response.body) throw await requestError(response);
 
   yield* parseNdjsonStream(response.body);
 }

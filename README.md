@@ -10,6 +10,32 @@ A VS Code-inspired portfolio that presents each section as a “file” inside a
 - Theme and layout switching (Dark/Light/High Contrast, Compact/Comfortable)
 - Split editor on desktop for side-by-side views
 - **Run & Debug (Job Fit)**: paste a job description to get a skill fit score, matched/missing skills, breakpoints to portfolio files, and a copyable report
+- **Copilot Chat (AI)**: a VS Code Copilot-style chat panel powered by Ollama Cloud (`gpt-oss:20b`) with streaming answers, follow-up questions, slash commands and links that open portfolio files
+  - **Ask Arun** (public): visitors ask about projects, skills and experience; answers come only from `content.ts`
+  - **JARVIS** (owner only, passcode): a private assistant behind an Iron Man–style verification screen, with:
+    - **Job finder** (`/jobs [query]`): searches the web for matching openings and shows cards with fit score, location/role filters and an Apply link
+    - **Cover letters + Send now**: drafts a letter for a job and opens Gmail with recipient, subject and letter filled in (recipient from the posting or a one-search HR email lookup)
+    - **Application tracker** (`/applied`): mark jobs as applied, see an Applied badge when they show up again, export/import as CSV
+
+## AI Chat
+
+Open it from the title bar or status bar chat icon, `Ctrl+Alt+I`, the Command Palette (`Chat: …`), or the terminal (`ask <question>`).
+
+| Command | Mode | What it does |
+| --- | --- | --- |
+| `/projects`, `/skills`, `/experience`, `/contact` | both | Ready-made questions |
+| `/clear` | both | Start a new chat |
+| `/owner` / `/public` | both | Unlock JARVIS (asks for the passcode) / lock it again |
+| `/jobs [query]` | owner | Find job openings, e.g. `/jobs golang remote` |
+| `/applied` | owner | Applied-jobs tracker with CSV download/import |
+
+How it fits together:
+
+- **Server proxy** — `worker/chat.ts` keeps the API key and passcode server-side. It runs inside the Vite dev server locally and as a Cloudflare Worker in production (see `worker/README.md`). It validates and rate-limits requests and re-checks the passcode on every owner request.
+- **Follow-ups** — the last 12 messages (max 24,000 characters) are sent with each question. Job results and the applications tracker are included as compact lists, so questions like "which of these are remote?" or "write a cover letter for #2" work. Each job card shows its fixed `#number` (best fit first), so filters and sorting never change what "#2" means.
+- **Web search quota** — the job finder and HR lookup use Ollama's free web search, which allows only a small burst. Results are cached (jobs 6 h, HR emails 7 days) and the chat shows a countdown when the limit is reached.
+- **Nothing is sent automatically** — "Send now" only opens Gmail; you review, attach your CV and send it yourself.
+- **Applications are stored in this browser** (`localStorage`). Use Download CSV for backups or to move them to another device. Storage goes through one `ApplicationStore` interface so a database can replace it later.
 
 ## Tech Stack
 
@@ -18,6 +44,8 @@ A VS Code-inspired portfolio that presents each section as a “file” inside a
 - Tailwind CSS + PostCSS
 - ESLint
 - Vitest (testing)
+- Ollama Cloud (`gpt-oss:20b` + web search) for the AI chat
+- Cloudflare Workers for the chat proxy
 
 ## Requirements
 
@@ -28,10 +56,18 @@ A VS Code-inspired portfolio that presents each section as a “file” inside a
 
 ```bash
 npm install
+cp .env.example .env.local   # then fill in the values below
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+Open `http://localhost:5173/arun-n-dev/` in your browser.
+
+`.env.local` (never committed):
+
+- `OLLAMA_API_KEY` — from ollama.com/settings/keys; powers the chat, job search and HR email lookup
+- `OWNER_PASSCODE` — the access code JARVIS asks for to unlock owner mode
+
+The site works without them; the chat then shows "Chat isn't set up on this site yet."
 
 ## Scripts
 
@@ -58,6 +94,7 @@ Open `http://localhost:5173` in your browser.
 │   │       └── utils/
 │   ├── pages/
 │   ├── portfolio/
+│   │   ├── ai/            # chat client, prompts, job finder, cover letters, applications
 │   │   ├── data/
 │   │   ├── Home.tsx
 │   │   ├── About.tsx
@@ -69,6 +106,7 @@ Open `http://localhost:5173` in your browser.
 │   ├── styles/
 │   ├── types/
 │   └── main.tsx
+├── worker/                # chat proxy (Cloudflare Worker + Vite dev middleware)
 ├── index.html
 ├── vite.config.ts
 ├── tailwind.config.js
@@ -93,6 +131,19 @@ Open `http://localhost:5173` in your browser.
 - `src/portfolio/jobFit.ts` — job description skill-fit analysis (matched/missing skills, score, breakpoints)
 - `src/portfolio/jobFit.test.ts` — vitest cases for the Job Fit analyzer
 
+## AI Chat Files
+
+- `worker/chat.ts` — proxy: Ollama chat streaming, job search, HR email lookup, passcode check, rate limits, caches
+- `src/portfolio/ai/systemPrompt.ts` — public and JARVIS prompts built from `content.ts`
+- `src/portfolio/ai/chatClient.ts`, `useChat.ts` — requests, streaming, per-mode history
+- `src/portfolio/ai/modelHistory.ts`, `chatLimits.ts` — what the model sees for follow-ups, and size limits
+- `src/portfolio/ai/slashCommands.ts` — slash commands
+- `src/portfolio/ai/jobs.ts` — job listing types, query building, location/role filters, HR email picking
+- `src/portfolio/ai/coverLetter.ts` — cover letter parsing, signature and Gmail compose link
+- `src/portfolio/ai/applications.ts`, `useApplications.ts` — applied-jobs store, matching and CSV
+- `src/features/vscode/components/chat/` — chat panel, JARVIS verification, job cards, send bar, tracker
+- Tests: `src/portfolio/ai/chat.test.ts`, `jobs.test.ts`, `applications.test.ts`
+
 ## Design Principles
 
 - React 18 + TypeScript
@@ -112,3 +163,5 @@ npm run preview
 ```
 
 Host the `dist/` folder on any static hosting provider (Netlify, Vercel, GitHub Pages, etc.).
+
+The AI chat needs the proxy deployed separately, because a static site can't keep the API key secret. Deploy `worker/` to Cloudflare once (free) and paste its URL into `PRODUCTION_CHAT_URL` in `src/portfolio/ai/chatClient.ts`. Steps are in `worker/README.md`. Redeploy the Worker whenever `worker/chat.ts` or the prompts change.
