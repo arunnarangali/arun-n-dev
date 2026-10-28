@@ -20,7 +20,8 @@ export type ChatMessage = {
 
 // Paste your Cloudflare Worker URL here after `npx wrangler deploy` (see worker/README.md),
 // e.g. 'https://arun-portfolio-chat.<your-subdomain>.workers.dev/'.
-const PRODUCTION_CHAT_URL = "https://arunnarangali.github.io/arun-n-dev";
+const PRODUCTION_CHAT_URL =
+  "https://arun-portfolio-chat.arunnarangali123.workers.dev";
 
 // In dev the Vite server answers `/api/chat` (see vite.config.ts).
 export const CHAT_API_URL = import.meta.env.DEV
