@@ -12,7 +12,12 @@ const openLink = (url?: string) => {
 const btnCls =
   'flex items-center gap-1.5 px-3 py-1 transition-colors hover:text-accent active:text-accent/80 cursor-pointer select-none'
 
-export const StatusBar = () => {
+type StatusBarProps = {
+  isChatOpen: boolean
+  onToggleChat: () => void
+}
+
+export const StatusBar = ({ isChatOpen, onToggleChat }: StatusBarProps) => {
   return (
     <footer className="vscode-scrollbar fixed bottom-0 left-0 z-50 flex h-[22px] w-full overflow-x-auto bg-primary-container font-sans text-[11px] text-on-primary shadow-lg">
       <div className="flex w-full min-w-max items-center justify-between whitespace-nowrap">
@@ -57,6 +62,14 @@ export const StatusBar = () => {
             React
           </button>
           
+          <button
+            className={`${btnCls} ${isChatOpen ? 'text-accent' : ''}`}
+            onClick={onToggleChat}
+            title="Copilot Chat"
+          >
+            <Icon name="smart_toy" className="text-[14px]" />
+          </button>
+
           <button
             className={btnCls}
             onClick={() => openLink(links.github)}

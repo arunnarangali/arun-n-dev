@@ -14,6 +14,8 @@ type MacTitleBarProps = {
     isSplit: boolean
     onToggle: () => void
   }
+  isChatOpen: boolean
+  onToggleChat: () => void
 }
 
 type MenuItem = {
@@ -36,6 +38,8 @@ export const MacTitleBar = ({
   editorMode,
   onToggleEditorMode,
   splitToggle,
+  isChatOpen,
+  onToggleChat,
 }: MacTitleBarProps) => {
   const [isMenuOpen, setMenuOpen] = useState(false)
   const [feedback, setFeedback] = useState('')
@@ -182,6 +186,14 @@ export const MacTitleBar = ({
         </div>
       </div>
       <div className="flex items-center gap-1.5">
+        <button
+          onClick={onToggleChat}
+          className={`${buttonBase} ${isChatOpen ? 'text-primary' : ''}`}
+          aria-pressed={isChatOpen}
+          title={isChatOpen ? 'Close chat (Ctrl+Alt+I)' : 'Open Copilot Chat (Ctrl+Alt+I)'}
+        >
+          <Icon name="smart_toy" className="text-[16px]" />
+        </button>
         <button
           onClick={onToggleTerminal}
           className={`${buttonBase} ${isTerminalOpen ? 'text-primary' : ''}`}

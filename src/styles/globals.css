@@ -289,6 +289,172 @@
   font-style: italic;
 }
 
+.wmde-markdown.chat-markdown {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.chat-markdown h1,
+.chat-markdown h2,
+.chat-markdown h3 {
+  font-size: 0.95rem;
+  border-bottom: none;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.chat-markdown p,
+.chat-markdown ul,
+.chat-markdown ol {
+  margin-bottom: 0.5rem;
+}
+
+.chat-markdown pre {
+  font-size: 12px;
+}
+
+/* JARVIS owner verification HUD. `--jarvis` is the tone colour for the current state. */
+.jarvis-hud {
+  --jarvis: var(--c-primary);
+  --jarvis-speed: 1;
+  background-image:
+    linear-gradient(rgb(var(--jarvis) / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--jarvis) / 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.jarvis-hud[data-phase='verifying'] {
+  --jarvis-speed: 0.3;
+}
+
+.jarvis-hud[data-phase='granted'] {
+  --jarvis: var(--c-accent);
+}
+
+.jarvis-hud[data-phase='denied'],
+.jarvis-hud[data-phase='lockout'] {
+  --jarvis: var(--c-error);
+}
+
+.jarvis-tone {
+  color: rgb(var(--jarvis));
+}
+
+.jarvis-scan {
+  background: linear-gradient(to bottom, transparent, rgb(var(--jarvis) / 0.12), transparent);
+  animation: jarvis-scan 4s linear infinite;
+}
+
+.jarvis-ring {
+  position: absolute;
+  border-radius: 9999px;
+  border-color: rgb(var(--jarvis) / 0.7);
+  transition: border-color 0.4s ease;
+  animation: jarvis-spin calc(var(--ring-duration) * var(--jarvis-speed)) linear infinite;
+}
+
+.jarvis-ring-reverse {
+  animation-direction: reverse;
+}
+
+.jarvis-core {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgb(var(--jarvis)) 0%, rgb(var(--jarvis) / 0.35) 45%, transparent 70%);
+  box-shadow: 0 0 28px 6px rgb(var(--jarvis) / 0.45);
+  animation: jarvis-pulse 2.2s ease-in-out infinite;
+}
+
+.jarvis-input {
+  border-color: rgb(var(--jarvis) / 0.6);
+  box-shadow: 0 0 12px rgb(var(--jarvis) / 0.25), inset 0 0 8px rgb(var(--jarvis) / 0.1);
+}
+
+.jarvis-input:focus {
+  border-color: rgb(var(--jarvis));
+}
+
+.jarvis-progress {
+  background: linear-gradient(90deg, transparent, rgb(var(--jarvis)), transparent);
+  background-size: 50% 100%;
+  background-repeat: no-repeat;
+  animation: jarvis-sweep 1s linear infinite;
+}
+
+.jarvis-shake {
+  animation: jarvis-shake 0.45s ease-in-out;
+}
+
+.jarvis-flash {
+  background: rgb(var(--jarvis) / 0.25);
+  animation: jarvis-flash 0.6s ease-out forwards;
+}
+
+@keyframes jarvis-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes jarvis-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes jarvis-scan {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(600%);
+  }
+}
+
+@keyframes jarvis-sweep {
+  from {
+    background-position: -50% 0;
+  }
+  to {
+    background-position: 150% 0;
+  }
+}
+
+@keyframes jarvis-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes jarvis-flash {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jarvis-ring,
+  .jarvis-core,
+  .jarvis-scan,
+  .jarvis-progress {
+    animation: none;
+  }
+}
+
 .editor-caret {
   width: 2px;
   background: var(--caret-color);

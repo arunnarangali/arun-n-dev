@@ -21,8 +21,11 @@ import { Breadcrumbs } from '../../features/vscode/components/Breadcrumbs'
 import { SinglePageEditor, type SinglePageEditorHandle } from '../../features/vscode/components/SinglePageEditor'
 import { AuxEditorOverlay } from '../../features/vscode/components/AuxEditorOverlay'
 import { useElementSize } from '../../features/vscode/hooks/useElementSize'
+import { ChatPanel, type PendingChatInput } from '../../features/vscode/components/chat/ChatPanel'
 
 const SIDEBAR_DEFAULT_WIDTH = 240
+const CHAT_DEFAULT_WIDTH = 360
+const CHAT_OPEN_KEY = 'vscode-chat-open'
 const MIN_EDITOR_PANE_DESKTOP = 320
 const MIN_EDITOR_PANE_MOBILE = 280
 
@@ -38,6 +41,11 @@ export const VSCodePortfolio = () => {
   const [auxActiveId, setAuxActiveId] = useState('')
   const [auxMode, setAuxMode] = useState<'preview' | 'code'>('preview')
   const [isAuxOpen, setAuxOpen] = useState(false)
+  const [isChatOpen, setChatOpen] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth >= 768 && window.localStorage.getItem(CHAT_OPEN_KEY) === 'true',
+  )
+  const [chatFocusSignal, setChatFocusSignal] = useState(0)
+  const [pendingChatInput, setPendingChatInput] = useState<PendingChatInput | null>(null)
   const editorGroups = useEditorGroups()
   const {
     setActiveTabForGroup,
@@ -124,6 +132,18 @@ export const VSCodePortfolio = () => {
       fallbackFileId,
     )
   }, [openFiles, fallbackFileId, ensureTabsValid])
+
+  useEffect(() => {
+    window.localStorage.setItem(CHAT_OPEN_KEY, String(isChatOpen))
+  }, [isChatOpen])
+
+  const openChat = useCallback((text?: string) => {
+    setChatOpen(true)
+    setChatFocusSignal((signal) => signal + 1)
+    if (text) setPendingChatInput({ id: Date.now(), text })
+  }, [])
+
+  const clearPendingChatInput = useCallback(() => setPendingChatInput(null), [])
 
   useEffect(() => {
     if (!commandFeedback) return
@@ -287,6 +307,13 @@ export const VSCodePortfolio = () => {
         return
       }
 
+      if (isCmdOrCtrl && event.altKey && !event.shiftKey && event.code === 'KeyI') {
+        event.preventDefault()
+        if (isChatOpen) setChatOpen(false)
+        else openChat()
+        return
+      }
+
       if (isCmdOrCtrl && event.code === 'Backquote' && !event.shiftKey && !event.altKey) {
         event.preventDefault()
         setTerminalOpen(true)
@@ -326,6 +353,8 @@ export const VSCodePortfolio = () => {
     closeCommandPalette,
     currentFile,
     currentMode,
+    isChatOpen,
+    openChat,
     setCommandFeedback,
     setSettingsOpen,
     setTerminalFocusSignal,
@@ -357,6 +386,15 @@ export const VSCodePortfolio = () => {
         case 'toggle-sidebar':
           workbench.toggleLeftPanel()
           break
+        case 'chat-open':
+          openChat()
+          break
+        case 'chat-new':
+          openChat('/clear')
+          break
+        case 'chat-owner-mode':
+          openChat('/owner')
+          break
         case 'format-document':
           if (currentFile && currentMode === 'code') {
             pushCommandFeedback('Document formatted.')
@@ -369,7 +407,7 @@ export const VSCodePortfolio = () => {
       }
       closeCommandPalette()
     },
-    [closeCommandPalette, currentFile, currentMode, pushCommandFeedback, workbench],
+    [closeCommandPalette, currentFile, currentMode, openChat, pushCommandFeedback, workbench],
   )
 
   const MIN_EDITOR_PANE = isDesktop ? MIN_EDITOR_PANE_DESKTOP : MIN_EDITOR_PANE_MOBILE
@@ -384,6 +422,16 @@ export const VSCodePortfolio = () => {
   })
 
   const sidebarHandleProps = sidebarResize.getHandleProps()
+
+  const chatResize = useResizablePanel({
+    axis: 'x',
+    storageKey: 'vscode-chat-width',
+    defaultSize: CHAT_DEFAULT_WIDTH,
+    min: 280,
+    getMax: ({ width }) => Math.min(640, width * 0.45),
+    enabled: isChatOpen && isDesktop,
+    invert: true,
+  })
 
   const editorWidthFallback = typeof window !== 'undefined' ? window.innerWidth - (isDesktop ? SIDEBAR_DEFAULT_WIDTH : 0) : 1200
   const editorWidth = Math.max(editorAreaSize.width || editorWidthFallback, MIN_EDITOR_PANE * editorGroups.groupCount)
@@ -466,6 +514,8 @@ export const VSCodePortfolio = () => {
             isSplit: editorGroups.groupCount === 2,
             onToggle: handlePrimarySplitToggle,
           }}
+          isChatOpen={isChatOpen}
+          onToggleChat={() => (isChatOpen ? setChatOpen(false) : openChat())}
         />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <ActivityBar
@@ -605,9 +655,42 @@ export const VSCodePortfolio = () => {
           setLayout={settings.setLayout}
           links={links as Record<string, string | undefined>}
           focusSignal={terminalFocusSignal}
+          onAsk={openChat}
         />
         </main>
+        {isChatOpen && isDesktop && (
+          <div className="group/chat relative flex h-full shrink-0 border-l border-outline-variant" style={{ width: `${chatResize.size}px` }}>
+            <div
+              className={`absolute left-0 top-0 z-10 h-full w-[6px] cursor-col-resize rounded-sm transition-opacity ${chatResize.isResizing ? 'opacity-100 bg-primary/40' : 'opacity-0 group-hover/chat:opacity-100 hover:bg-primary/30'
+                }`}
+              {...chatResize.getHandleProps()}
+              onDoubleClick={(event) => {
+                event.preventDefault()
+                chatResize.setSize(CHAT_DEFAULT_WIDTH)
+              }}
+            />
+            <ChatPanel
+              onClose={() => setChatOpen(false)}
+              onOpenFile={handleOpenFile}
+              pendingInput={pendingChatInput}
+              onPendingConsumed={clearPendingChatInput}
+              focusSignal={chatFocusSignal}
+            />
+          </div>
+        )}
       </div>
+      {isChatOpen && !isDesktop && (
+        <div className="fixed inset-x-0 bottom-[22px] top-0 z-50 animate-slide-in">
+          <ChatPanel
+            variant="overlay"
+            onClose={() => setChatOpen(false)}
+            onOpenFile={handleOpenFile}
+            pendingInput={pendingChatInput}
+            onPendingConsumed={clearPendingChatInput}
+            focusSignal={chatFocusSignal}
+          />
+        </div>
+      )}
       {workbench.isLeftPanelOpen && (
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60" onClick={workbench.closePanel} />
@@ -662,13 +745,13 @@ export const VSCodePortfolio = () => {
           {commandFeedback}
         </div>
       )}
-      <StatusBar />
+      <StatusBar isChatOpen={isChatOpen} onToggleChat={() => (isChatOpen ? setChatOpen(false) : openChat())} />
       {isCommandPaletteOpen && (
         <CommandPalette open={isCommandPaletteOpen} onClose={closeCommandPalette} onSelectCommand={handleCommandSelect} />
       )}
       <ProfileModal isOpen={isProfileOpen} onClose={() => setProfileOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
-      <FloatingContact />
+      {!isChatOpen && <FloatingContact />}
     </div>
   )
 }

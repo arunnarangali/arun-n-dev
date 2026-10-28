@@ -17,6 +17,7 @@ type TerminalPanelProps = {
   setLayout: (layout: Layout) => void
   links: Record<string, string | undefined>
   focusSignal?: number
+  onAsk?: (question: string) => void
 }
 
 type TerminalLine = {
@@ -75,6 +76,7 @@ export const TerminalPanel = ({
   setLayout,
   links,
   focusSignal,
+  onAsk,
 }: TerminalPanelProps) => {
   const [lines, setLines] = useState<TerminalLine[]>(() => formatIntroLines())
   const [input, setInput] = useState('')
@@ -234,6 +236,7 @@ export const TerminalPanel = ({
               '- skills · List core stacks',
               '- projects · Highlight current builds',
               '- fit <job description> · Check skill fit for a role',
+              '- ask <question> · Ask Copilot Chat about me',
               '- update · Fetch build + status logs',
               '- install · Simulate dependency sync',
               '- url | copy url · Share portfolio link',
@@ -278,6 +281,14 @@ export const TerminalPanel = ({
             break
           }
           appendLines(formatJobFitReport(analyzeJobFit(arg)), 'output')
+          break
+        case 'ask':
+          if (!arg) {
+            appendLine('Usage: ask <question>', 'output')
+            break
+          }
+          onAsk?.(arg)
+          appendLine('Opened Copilot Chat →', 'system')
           break
         case 'update':
           appendLines(
@@ -362,7 +373,7 @@ export const TerminalPanel = ({
           appendLine(`Command not found: ${base}`, 'output')
       }
     },
-    [appendLine, appendLines, clearTerminal, copyToClipboard, links.github, links.linkedin, links.repo, openFile, openLink, portfolioUrl, setLayout, setTheme],
+    [appendLine, appendLines, clearTerminal, copyToClipboard, links.github, links.linkedin, links.repo, onAsk, openFile, openLink, portfolioUrl, setLayout, setTheme],
   )
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
