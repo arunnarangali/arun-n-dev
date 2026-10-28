@@ -32,7 +32,7 @@ export const slashCommands: SlashCommand[] = [
     description: "Jobs you applied to, with CSV export (owner)",
   },
   { name: "clear", description: "Start a new chat" },
-  { name: "owner", description: "Unlock owner mode (JARVIS)" },
+  { name: "owner", description: "Unlock owner mode (Akaza)" },
   { name: "public", description: "Lock owner mode" },
 ];
 

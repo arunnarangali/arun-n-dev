@@ -312,90 +312,90 @@
   font-size: 12px;
 }
 
-/* JARVIS owner verification HUD. `--jarvis` is the tone colour for the current state. */
-.jarvis-hud {
-  --jarvis: var(--c-primary);
-  --jarvis-speed: 1;
+/* Akaza owner verification HUD. `--akaza` is the tone colour for the current state. */
+.akaza-hud {
+  --akaza: var(--c-primary);
+  --akaza-speed: 1;
   background-image:
-    linear-gradient(rgb(var(--jarvis) / 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(var(--jarvis) / 0.05) 1px, transparent 1px);
+    linear-gradient(rgb(var(--akaza) / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--akaza) / 0.05) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 
-.jarvis-hud[data-phase='verifying'] {
-  --jarvis-speed: 0.3;
+.akaza-hud[data-phase='verifying'] {
+  --akaza-speed: 0.3;
 }
 
-.jarvis-hud[data-phase='granted'] {
-  --jarvis: var(--c-accent);
+.akaza-hud[data-phase='granted'] {
+  --akaza: var(--c-accent);
 }
 
-.jarvis-hud[data-phase='denied'],
-.jarvis-hud[data-phase='lockout'] {
-  --jarvis: var(--c-error);
+.akaza-hud[data-phase='denied'],
+.akaza-hud[data-phase='lockout'] {
+  --akaza: var(--c-error);
 }
 
-.jarvis-tone {
-  color: rgb(var(--jarvis));
+.akaza-tone {
+  color: rgb(var(--akaza));
 }
 
-.jarvis-scan {
-  background: linear-gradient(to bottom, transparent, rgb(var(--jarvis) / 0.12), transparent);
-  animation: jarvis-scan 4s linear infinite;
+.akaza-scan {
+  background: linear-gradient(to bottom, transparent, rgb(var(--akaza) / 0.12), transparent);
+  animation: akaza-scan 4s linear infinite;
 }
 
-.jarvis-ring {
+.akaza-ring {
   position: absolute;
   border-radius: 9999px;
-  border-color: rgb(var(--jarvis) / 0.7);
+  border-color: rgb(var(--akaza) / 0.7);
   transition: border-color 0.4s ease;
-  animation: jarvis-spin calc(var(--ring-duration) * var(--jarvis-speed)) linear infinite;
+  animation: akaza-spin calc(var(--ring-duration) * var(--akaza-speed)) linear infinite;
 }
 
-.jarvis-ring-reverse {
+.akaza-ring-reverse {
   animation-direction: reverse;
 }
 
-.jarvis-core {
+.akaza-core {
   position: absolute;
   border-radius: 9999px;
-  background: radial-gradient(circle, rgb(var(--jarvis)) 0%, rgb(var(--jarvis) / 0.35) 45%, transparent 70%);
-  box-shadow: 0 0 28px 6px rgb(var(--jarvis) / 0.45);
-  animation: jarvis-pulse 2.2s ease-in-out infinite;
+  background: radial-gradient(circle, rgb(var(--akaza)) 0%, rgb(var(--akaza) / 0.35) 45%, transparent 70%);
+  box-shadow: 0 0 28px 6px rgb(var(--akaza) / 0.45);
+  animation: akaza-pulse 2.2s ease-in-out infinite;
 }
 
-.jarvis-input {
-  border-color: rgb(var(--jarvis) / 0.6);
-  box-shadow: 0 0 12px rgb(var(--jarvis) / 0.25), inset 0 0 8px rgb(var(--jarvis) / 0.1);
+.akaza-input {
+  border-color: rgb(var(--akaza) / 0.6);
+  box-shadow: 0 0 12px rgb(var(--akaza) / 0.25), inset 0 0 8px rgb(var(--akaza) / 0.1);
 }
 
-.jarvis-input:focus {
-  border-color: rgb(var(--jarvis));
+.akaza-input:focus {
+  border-color: rgb(var(--akaza));
 }
 
-.jarvis-progress {
-  background: linear-gradient(90deg, transparent, rgb(var(--jarvis)), transparent);
+.akaza-progress {
+  background: linear-gradient(90deg, transparent, rgb(var(--akaza)), transparent);
   background-size: 50% 100%;
   background-repeat: no-repeat;
-  animation: jarvis-sweep 1s linear infinite;
+  animation: akaza-sweep 1s linear infinite;
 }
 
-.jarvis-shake {
-  animation: jarvis-shake 0.45s ease-in-out;
+.akaza-shake {
+  animation: akaza-shake 0.45s ease-in-out;
 }
 
-.jarvis-flash {
-  background: rgb(var(--jarvis) / 0.25);
-  animation: jarvis-flash 0.6s ease-out forwards;
+.akaza-flash {
+  background: rgb(var(--akaza) / 0.25);
+  animation: akaza-flash 0.6s ease-out forwards;
 }
 
-@keyframes jarvis-spin {
+@keyframes akaza-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-@keyframes jarvis-pulse {
+@keyframes akaza-pulse {
   0%,
   100% {
     opacity: 0.75;
@@ -407,7 +407,7 @@
   }
 }
 
-@keyframes jarvis-scan {
+@keyframes akaza-scan {
   from {
     transform: translateY(-100%);
   }
@@ -416,7 +416,7 @@
   }
 }
 
-@keyframes jarvis-sweep {
+@keyframes akaza-sweep {
   from {
     background-position: -50% 0;
   }
@@ -425,7 +425,7 @@
   }
 }
 
-@keyframes jarvis-shake {
+@keyframes akaza-shake {
   0%,
   100% {
     transform: translateX(0);
@@ -440,17 +440,17 @@
   }
 }
 
-@keyframes jarvis-flash {
+@keyframes akaza-flash {
   to {
     opacity: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jarvis-ring,
-  .jarvis-core,
-  .jarvis-scan,
-  .jarvis-progress {
+  .akaza-ring,
+  .akaza-core,
+  .akaza-scan,
+  .akaza-progress {
     animation: none;
   }
 }

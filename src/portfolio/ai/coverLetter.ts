@@ -39,7 +39,7 @@ const stripMarkdown = (text: string) =>
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
-// Splits a JARVIS letter into subject and plain-text body.
+// Splits an Akaza letter into subject and plain-text body.
 export const parseCoverLetter = (text: string, target: CoverLetterTarget) => {
   const plain = stripMarkdown(text);
   const match = /^\s*subject\s*:\s*(.+)$/im.exec(plain);

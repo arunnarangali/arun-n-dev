@@ -20,7 +20,7 @@ requests from browsers, and because the API key must not be in the website code.
    | `CLOUDFLARE_API_TOKEN` | the token from step 1 |
    | `CLOUDFLARE_ACCOUNT_ID` | the account ID from step 1 |
    | `OLLAMA_API_KEY` | your key from ollama.com/settings/keys |
-   | `OWNER_PASSCODE` | the access code JARVIS asks for (use a new, strong one) |
+   | `OWNER_PASSCODE` | the access code Akaza asks for (use a new, strong one) |
 
 3. **Push to `main`** (or re-run the latest workflow). Open **Actions → Deploy to GitHub Pages → deploy-worker** and copy the `https://arun-portfolio-chat.<subdomain>.workers.dev` URL from the log.
 4. Paste that URL into `PRODUCTION_CHAT_URL` in `src/portfolio/ai/chatClient.ts` and push again. Only needed once.
@@ -33,7 +33,7 @@ After that, every push to `main` redeploys the Worker with the current secrets. 
 cd worker
 npx wrangler login
 npx wrangler secret put OLLAMA_API_KEY
-npx wrangler secret put OWNER_PASSCODE   # the code JARVIS asks for to unlock owner mode
+npx wrangler secret put OWNER_PASSCODE   # the code Akaza asks for to unlock owner mode
 npx wrangler deploy
 ```
 
@@ -44,7 +44,7 @@ All requests are `POST` with JSON. Owner-only requests need the `X-Owner-Passcod
 | Body | Access | What it does |
 | --- | --- | --- |
 | `{ mode, messages }` | public; `mode: "owner"` needs the passcode | Streams a chat answer (NDJSON) from `gpt-oss:20b` |
-| `{ verify: true }` | — | Checks the passcode for the JARVIS screen (200 / 403); never calls Ollama |
+| `{ verify: true }` | — | Checks the passcode for the Akaza screen (200 / 403); never calls Ollama |
 | `{ jobs: { query?, fresh? } }` | owner | Web search + extraction into job listings |
 | `{ hrEmail: { company } }` | owner | One web search for a company's HR/careers email |
 

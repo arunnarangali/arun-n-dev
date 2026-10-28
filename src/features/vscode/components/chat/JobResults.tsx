@@ -257,7 +257,7 @@ export const JobResults = ({
               <h3 className="font-semibold leading-snug text-on-surface">
                 <span
                   className="mr-1 font-mono text-[11px] text-on-surface-variant"
-                  title={`Job #${job.number}: ask JARVIS about it by number, e.g. "cover letter for #${job.number}"`}
+                  title={`Job #${job.number}: ask Akaza about it by number, e.g. "cover letter for #${job.number}"`}
                 >
                   #{job.number}
                 </span>
@@ -329,7 +329,7 @@ export const JobResults = ({
               onClick={() => onDraft(job)}
               disabled={isBusy}
               className="flex items-center gap-1 rounded border border-outline-variant px-2 py-1 text-[11px] text-on-surface hover:border-primary hover:text-accent disabled:opacity-40"
-              title="Ask JARVIS to draft a cover letter for this opening"
+              title="Ask Akaza to draft a cover letter for this opening"
             >
               <Icon name="edit_note" className="text-[13px]" /> Cover letter
             </button>
@@ -337,7 +337,7 @@ export const JobResults = ({
               <button
                 onClick={() => markApplied(job, { via: "portal" })}
                 className="flex items-center gap-1 rounded px-1.5 py-1 text-[11px] text-on-surface-variant hover:text-accent"
-                title="Applied on the job site? Mark it so JARVIS remembers"
+                title="Applied on the job site? Mark it so Akaza remembers"
               >
                 <Icon name="check" className="text-[13px]" /> Mark applied
               </button>

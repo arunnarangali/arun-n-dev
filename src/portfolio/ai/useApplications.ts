@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import {
   APPLICATIONS_STORAGE_KEY,
+  LEGACY_APPLICATIONS_STORAGE_KEY,
   createApplication,
   localApplicationStore,
   mergeApplications,
@@ -22,7 +23,12 @@ const emit = () => listeners.forEach((listener) => listener());
 // component is mounted, so getApplications() and later saves never use a stale copy.
 if (typeof window !== "undefined") {
   window.addEventListener("storage", (event) => {
-    if (event.key !== APPLICATIONS_STORAGE_KEY) return;
+    // A tab still on the old site version writes the old key; load() moves it over.
+    if (
+      event.key !== APPLICATIONS_STORAGE_KEY &&
+      event.key !== LEGACY_APPLICATIONS_STORAGE_KEY
+    )
+      return;
     snapshot = store.load();
     emit();
   });
@@ -79,7 +85,7 @@ export const downloadApplicationsCsv = () => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `jarvis-applications-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `akaza-applications-${new Date().toISOString().slice(0, 10)}.csv`;
   // Firefox and Safari need the link in the document, and the URL alive until the
   // download has started.
   document.body.appendChild(link);

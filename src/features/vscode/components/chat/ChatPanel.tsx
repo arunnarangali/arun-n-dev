@@ -218,11 +218,11 @@ const ChatSession = ({
             className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${isOwner ? "bg-accent/20 text-accent" : "bg-primary/15 text-primary"}`}
             title={
               isOwner
-                ? "Owner mode: JARVIS, your private assistant"
+                ? "Owner mode: Akaza, your private assistant"
                 : "Answers questions about this portfolio"
             }
           >
-            {isOwner ? "JARVIS" : `Ask ${firstName}`}
+            {isOwner ? "Akaza" : `Ask ${firstName}`}
           </span>
         </div>
         <div className="flex items-center gap-0.5">
@@ -261,7 +261,7 @@ const ChatSession = ({
             </h2>
             <p className="mt-1 text-[12px] text-on-surface-variant">
               {isOwner
-                ? "JARVIS online. Your profile is loaded as context."
+                ? "Akaza online. Your profile is loaded as context."
                 : "Projects, skills, experience or how to get in touch."}
             </p>
             <div className="mt-5 flex w-full flex-col gap-2">
@@ -297,7 +297,7 @@ const ChatSession = ({
               }
               onFindHrEmail={(company) =>
                 findHrEmail({ company, passcode }).catch((caught: unknown) => {
-                  // Passcode changed on the server: back to the JARVIS screen, like chat does.
+                  // Passcode changed on the server: back to the Akaza screen, like chat does.
                   if (caught instanceof ChatRequestError && caught.status === 403)
                     onUnauthorized();
                   throw caught;
@@ -321,7 +321,7 @@ const ChatSession = ({
       <ChatInput
         isBusy={isBusy}
         placeholder={
-          isOwner ? "Ask JARVIS anything…" : `Ask about ${firstName}…`
+          isOwner ? "Ask Akaza anything…" : `Ask about ${firstName}…`
         }
         onSubmit={handleSubmit}
         onStop={stop}

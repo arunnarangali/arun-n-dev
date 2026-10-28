@@ -12,7 +12,7 @@ A VS Code-inspired portfolio that presents each section as a “file” inside a
 - **Run & Debug (Job Fit)**: paste a job description to get a skill fit score, matched/missing skills, breakpoints to portfolio files, and a copyable report
 - **Copilot Chat (AI)**: a VS Code Copilot-style chat panel powered by Ollama Cloud (`gpt-oss:20b`) with streaming answers, follow-up questions, slash commands and links that open portfolio files
   - **Ask Arun** (public): visitors ask about projects, skills and experience; answers come only from `content.ts`
-  - **JARVIS** (owner only, passcode): a private assistant behind an Iron Man–style verification screen, with:
+  - **Akaza** (owner only, passcode): a private assistant behind a sci-fi style verification screen, with:
     - **Job finder** (`/jobs [query]`): searches the web for matching openings and shows cards with fit score, location/role filters and an Apply link
     - **Cover letters + Send now**: drafts a letter for a job and opens Gmail with recipient, subject and letter filled in (recipient from the posting or a one-search HR email lookup)
     - **Application tracker** (`/applied`): mark jobs as applied, see an Applied badge when they show up again, export/import as CSV
@@ -25,7 +25,7 @@ Open it from the title bar or status bar chat icon, `Ctrl+Alt+I`, the Command Pa
 | --- | --- | --- |
 | `/projects`, `/skills`, `/experience`, `/contact` | both | Ready-made questions |
 | `/clear` | both | Start a new chat |
-| `/owner` / `/public` | both | Unlock JARVIS (asks for the passcode) / lock it again |
+| `/owner` / `/public` | both | Unlock Akaza (asks for the passcode) / lock it again |
 | `/jobs [query]` | owner | Find job openings, e.g. `/jobs golang remote` |
 | `/applied` | owner | Applied-jobs tracker with CSV download/import |
 
@@ -65,7 +65,7 @@ Open `http://localhost:5173/arun-n-dev/` in your browser.
 `.env.local` (never committed):
 
 - `OLLAMA_API_KEY` — from ollama.com/settings/keys; powers the chat, job search and HR email lookup
-- `OWNER_PASSCODE` — the access code JARVIS asks for to unlock owner mode
+- `OWNER_PASSCODE` — the access code Akaza asks for to unlock owner mode
 
 The site works without them; the chat then shows "Chat isn't set up on this site yet."
 
@@ -134,14 +134,14 @@ The site works without them; the chat then shows "Chat isn't set up on this site
 ## AI Chat Files
 
 - `worker/chat.ts` — proxy: Ollama chat streaming, job search, HR email lookup, passcode check, rate limits, caches
-- `src/portfolio/ai/systemPrompt.ts` — public and JARVIS prompts built from `content.ts`
+- `src/portfolio/ai/systemPrompt.ts` — public and Akaza prompts built from `content.ts`
 - `src/portfolio/ai/chatClient.ts`, `useChat.ts` — requests, streaming, per-mode history
 - `src/portfolio/ai/modelHistory.ts`, `chatLimits.ts` — what the model sees for follow-ups, and size limits
 - `src/portfolio/ai/slashCommands.ts` — slash commands
 - `src/portfolio/ai/jobs.ts` — job listing types, query building, location/role filters, HR email picking
 - `src/portfolio/ai/coverLetter.ts` — cover letter parsing, signature and Gmail compose link
 - `src/portfolio/ai/applications.ts`, `useApplications.ts` — applied-jobs store, matching and CSV
-- `src/features/vscode/components/chat/` — chat panel, JARVIS verification, job cards, send bar, tracker
+- `src/features/vscode/components/chat/` — chat panel, Akaza verification, job cards, send bar, tracker
 - Tests: `src/portfolio/ai/chat.test.ts`, `jobs.test.ts`, `applications.test.ts`
 
 ## Design Principles

@@ -1,4 +1,4 @@
-// Job applications marked in the JARVIS chat. Pure helpers plus a storage seam: swap
+// Job applications marked in the Akaza chat. Pure helpers plus a storage seam: swap
 // `localApplicationStore` for a database-backed store later without touching the UI.
 
 export type ApplicationVia = "gmail" | "portal";
@@ -22,19 +22,29 @@ export interface ApplicationStore {
   save(list: Application[]): void;
 }
 
-const STORAGE_KEY = "vscode-jarvis-applications";
+const STORAGE_KEY = "vscode-akaza-applications";
+// Earlier name of the key. Its entries are merged into the new key once, then removed.
+const LEGACY_STORAGE_KEY = "vscode-jarvis-applications";
+
+const readList = (key: string): Application[] => {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(key) ?? "[]");
+    return Array.isArray(stored) ? stored : [];
+  } catch {
+    return [];
+  }
+};
 
 export const localApplicationStore: ApplicationStore = {
   load() {
     if (typeof window === "undefined") return [];
-    try {
-      const stored = JSON.parse(
-        window.localStorage.getItem(STORAGE_KEY) ?? "[]",
-      );
-      return Array.isArray(stored) ? stored : [];
-    } catch {
-      return [];
-    }
+    const list = readList(STORAGE_KEY);
+    if (window.localStorage.getItem(LEGACY_STORAGE_KEY) === null) return list;
+    // One-time move: keep entries from both keys, then drop the old one.
+    const merged = mergeApplications(list, readList(LEGACY_STORAGE_KEY)).list;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+    return merged;
   },
   save(list) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
@@ -42,6 +52,7 @@ export const localApplicationStore: ApplicationStore = {
 };
 
 export const APPLICATIONS_STORAGE_KEY = STORAGE_KEY;
+export const LEGACY_APPLICATIONS_STORAGE_KEY = LEGACY_STORAGE_KEY;
 
 const normalize = (value: string) =>
   value

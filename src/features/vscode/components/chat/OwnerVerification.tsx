@@ -2,9 +2,12 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Icon } from "../Icon";
 import { verifyOwner } from "../../../../portfolio/ai/chatClient";
 import { aboutContent } from "../../../../portfolio/content";
+import {
+  readVoiceOn,
+  saveVoiceOn,
+} from "../../../../portfolio/ai/voicePreference";
 
 const firstName = aboutContent.name.split(" ")[0];
-const VOICE_KEY = "vscode-jarvis-voice";
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_MS = 30_000;
 const GRANTED_DELAY_MS = 1800;
@@ -20,7 +23,7 @@ const greeting = () => {
   return "Good evening";
 };
 
-// Browser text-to-speech. Prefers a British English voice, like JARVIS.
+// Browser text-to-speech. Prefers a calm British English voice.
 const speak = (text: string) => {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
   const synth = window.speechSynthesis;
@@ -76,10 +79,10 @@ const TypeLine = ({
         : "text-on-surface";
   return (
     <p className={`font-mono text-[12px] leading-relaxed ${color}`}>
-      <span className="jarvis-tone mr-2">›</span>
+      <span className="akaza-tone mr-2">›</span>
       {text.slice(0, count)}
       {count < text.length && (
-        <span className="jarvis-tone animate-pulse">▌</span>
+        <span className="akaza-tone animate-pulse">▌</span>
       )}
     </p>
   );
@@ -90,7 +93,7 @@ const ring = (
   duration: string,
   classes: string,
 ): { className: string; style: CSSProperties } => ({
-  className: `jarvis-ring ${classes}`,
+  className: `akaza-ring ${classes}`,
   style: { inset, "--ring-duration": duration } as CSSProperties,
 });
 
@@ -106,11 +109,7 @@ export const OwnerVerification = ({
   const [phase, setPhase] = useState<Phase>("idle");
   const [value, setValue] = useState("");
   const [attempts, setAttempts] = useState(0);
-  const [voiceOn, setVoiceOn] = useState(
-    () =>
-      typeof window === "undefined" ||
-      window.localStorage.getItem(VOICE_KEY) !== "off",
-  );
+  const [voiceOn, setVoiceOn] = useState(readVoiceOn);
   const [lines, setLines] = useState<Line[]>(() => [
     { id: 1, text: `${greeting()}, ${firstName}.`, tone: "info", delay: 200 },
     {
@@ -224,7 +223,7 @@ export const OwnerVerification = ({
 
   const toggleVoice = () => {
     const next = !voiceOn;
-    window.localStorage.setItem(VOICE_KEY, next ? "on" : "off");
+    saveVoiceOn(next);
     if (!next) window.speechSynthesis?.cancel();
     setVoiceOn(next);
   };
@@ -240,26 +239,26 @@ export const OwnerVerification = ({
 
   return (
     <div
-      className="jarvis-hud relative flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-container-lowest"
+      className="akaza-hud relative flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-container-lowest"
       data-phase={phase}
     >
-      <div className="jarvis-scan pointer-events-none absolute inset-x-0 top-0 h-24" />
+      <div className="akaza-scan pointer-events-none absolute inset-x-0 top-0 h-24" />
       {(phase === "denied" || phase === "granted") && (
         <div
           key={`flash-${attempts}-${phase}`}
-          className="jarvis-flash pointer-events-none absolute inset-0"
+          className="akaza-flash pointer-events-none absolute inset-0"
         />
       )}
 
       <div className="relative flex items-center justify-between gap-2 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">
-        <span className="jarvis-tone truncate whitespace-nowrap">
-          JARVIS · Secure channel
+        <span className="akaza-tone truncate whitespace-nowrap">
+          Akaza · Secure channel
         </span>
         <div className="flex items-center gap-1 tracking-normal">
           <button
             onClick={toggleVoice}
             className="rounded p-1 text-on-surface-variant transition-colors hover:text-accent"
-            title={voiceOn ? "Mute JARVIS voice" : "Unmute JARVIS voice"}
+            title={voiceOn ? "Mute Akaza voice" : "Unmute Akaza voice"}
           >
             <Icon
               name={voiceOn ? "volume_up" : "volume_off"}
@@ -283,18 +282,18 @@ export const OwnerVerification = ({
             {...ring(
               "10px",
               "7s",
-              "jarvis-ring-reverse border border-t-transparent",
+              "akaza-ring-reverse border border-t-transparent",
             )}
           />
           <span {...ring("22px", "3.5s", "border-4 border-x-transparent")} />
           <span
-            {...ring("36px", "9s", "jarvis-ring-reverse border border-dotted")}
+            {...ring("36px", "9s", "akaza-ring-reverse border border-dotted")}
           />
-          <span className="jarvis-core" style={{ inset: "46px" }} />
+          <span className="akaza-core" style={{ inset: "46px" }} />
         </div>
 
         <p
-          className="jarvis-tone mb-3 font-mono text-[10px] uppercase tracking-[0.35em]"
+          className="akaza-tone mb-3 font-mono text-[10px] uppercase tracking-[0.35em]"
           role="status"
         >
           {statusLabel}
@@ -317,16 +316,16 @@ export const OwnerVerification = ({
         <form
           key={`form-${attempts}`}
           onSubmit={handleSubmit}
-          className={`w-full ${phase === "denied" ? "jarvis-shake" : ""}`}
+          className={`w-full ${phase === "denied" ? "akaza-shake" : ""}`}
         >
           <label
-            htmlFor="jarvis-access-code"
-            className="jarvis-tone mb-1.5 block font-mono text-[10px] uppercase tracking-[0.3em]"
+            htmlFor="akaza-access-code"
+            className="akaza-tone mb-1.5 block font-mono text-[10px] uppercase tracking-[0.3em]"
           >
             Access code
           </label>
           <input
-            id="jarvis-access-code"
+            id="akaza-access-code"
             ref={inputRef}
             type="password"
             autoFocus
@@ -337,17 +336,17 @@ export const OwnerVerification = ({
             onKeyDown={(event) => {
               if (event.key === "Escape") onCancel();
             }}
-            className="jarvis-input w-full rounded border bg-transparent px-3 py-2 font-mono text-[14px] tracking-[0.4em] text-on-surface outline-none disabled:opacity-50"
+            className="akaza-input w-full rounded border bg-transparent px-3 py-2 font-mono text-[14px] tracking-[0.4em] text-on-surface outline-none disabled:opacity-50"
           />
           <div className="mt-1 h-[2px] w-full overflow-hidden rounded">
             {phase === "verifying" && (
-              <div className="jarvis-progress h-full w-full" />
+              <div className="akaza-progress h-full w-full" />
             )}
           </div>
           <button
             type="submit"
             disabled={isLocked || phase === "verifying" || !value.trim()}
-            className="jarvis-input jarvis-tone mt-3 w-full rounded border py-2 font-mono text-[11px] font-bold uppercase tracking-[0.35em] transition-opacity hover:opacity-80 disabled:opacity-40"
+            className="akaza-input akaza-tone mt-3 w-full rounded border py-2 font-mono text-[11px] font-bold uppercase tracking-[0.35em] transition-opacity hover:opacity-80 disabled:opacity-40"
           >
             {phase === "verifying" ? "Authenticating…" : "Authenticate"}
           </button>
