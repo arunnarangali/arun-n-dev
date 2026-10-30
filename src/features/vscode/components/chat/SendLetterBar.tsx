@@ -3,6 +3,7 @@ import { Icon } from "../Icon";
 import {
   buildGmailComposeUrl,
   composeCoverLetterEmail,
+  downloadResume,
   MAX_COMPOSE_URL_CHARS,
   ownerEmail,
   type CoverLetterTarget,
@@ -10,7 +11,7 @@ import {
 import type { HrEmailResult } from "../../../../portfolio/ai/chatClient";
 import { isEmail } from "../../../../portfolio/ai/jobs";
 import {
-  findApplication,
+  matchApplication,
   formatAppliedDate,
 } from "../../../../portfolio/ai/applications";
 import {
@@ -18,6 +19,10 @@ import {
   unmarkApplied,
   useApplications,
 } from "../../../../portfolio/ai/useApplications";
+import {
+  applyAnyway,
+  useApplyAnyway,
+} from "../../../../portfolio/ai/useApplyAnyway";
 
 type Lookup =
   | { state: "idle" | "searching" | "none" }
@@ -28,6 +33,8 @@ type SendLetterBarProps = {
   letter: string;
   target: CoverLetterTarget;
   onFindHrEmail: (company: string) => Promise<HrEmailResult>;
+  // Folds the letter into its summary card (shown once it's applied).
+  onCollapse?: () => void;
 };
 
 // "Send now": opens Gmail compose with the letter. Gmail is the review step; nothing is sent from here.
@@ -35,6 +42,7 @@ export const SendLetterBar = ({
   letter,
   target,
   onFindHrEmail,
+  onCollapse,
 }: SendLetterBarProps) => {
   const [to, setTo] = useState(target.email);
   const [lookup, setLookup] = useState<Lookup>(
@@ -48,7 +56,21 @@ export const SendLetterBar = ({
     null,
   );
   const applications = useApplications();
-  const applied = findApplication(applications, target);
+  const applyAnywayUrls = useApplyAnyway();
+  const match = matchApplication(applications, target, {
+    applyAnyway: applyAnywayUrls,
+  });
+  // Same rules as the job cards:
+  // - "applied": this exact posting is done.
+  // - "sameRole": most likely the same opening on another site, so it's treated as
+  //   applied unless the user says it's a different opening (Apply anyway).
+  // - "repost" / "applyAnyway": a new opening; marking it adds a separate entry.
+  const applied = match?.status === "applied" ? match.entry : undefined;
+  const sameRole = match?.status === "sameRole" ? match.entry : undefined;
+  const earlier =
+    match?.status === "repost" || match?.status === "applyAnyway"
+      ? match.entry
+      : undefined;
   const recipientInvalid = to.trim() !== "" && !isEmail(to.trim());
 
   const findHr = async () => {
@@ -160,6 +182,13 @@ export const SendLetterBar = ({
         >
           <Icon name="send" className="text-[13px]" /> Send now
         </button>
+        <button
+          onClick={downloadResume}
+          className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded border border-outline-variant px-1.5 py-1 text-on-surface hover:border-primary hover:text-accent"
+          title="Download ArunCV.pdf to attach in Gmail"
+        >
+          <Icon name="download" className="text-[13px]" /> CV
+        </button>
         <span className="min-w-0 flex-1 leading-snug text-on-surface-variant">
           {lookup.state === "found" &&
             `Email from ${lookup.source}. Check it before sending.`}
@@ -169,11 +198,33 @@ export const SendLetterBar = ({
             <span className="text-error">{lookup.message}</span>
           )}
           {lookup.state === "idle" &&
-            "Opens Gmail. Attach your CV before sending."}
+            "Opens Gmail. Use CV to download your resume and attach it."}
           {isSearching && `Searching for ${target.company}'s HR email…`}
         </span>
       </div>
       {notice && <p className="text-tertiary">{notice}</p>}
+      {sameRole && (
+        <p className="flex flex-wrap items-center gap-1.5 text-on-surface-variant">
+          <Icon name="task_alt" className="text-[14px] text-accent" />
+          You already applied to this role on{" "}
+          {formatAppliedDate(sameRole.appliedAt)} (likely the same opening on
+          another site).
+          <button
+            onClick={() => applyAnyway(target.url)}
+            className="text-primary underline hover:text-accent"
+            title="It's a different opening (another team, city or a new posting)"
+          >
+            Different opening? Apply anyway
+          </button>
+        </p>
+      )}
+      {earlier && (
+        <p className="text-on-surface-variant">
+          You applied to a {target.title} role at {target.company} on{" "}
+          {formatAppliedDate(earlier.appliedAt)}. Check it's a different
+          opening.
+        </p>
+      )}
       {applied ? (
         <p className="flex items-center gap-1.5 text-accent">
           <Icon name="task_alt" className="text-[14px]" />
@@ -184,18 +235,27 @@ export const SendLetterBar = ({
           >
             Undo
           </button>
+          {onCollapse && (
+            <button
+              onClick={onCollapse}
+              className="ml-auto flex items-center gap-0.5 text-primary hover:text-accent"
+            >
+              <Icon name="expand_less" className="text-[14px]" /> Collapse
+            </button>
+          )}
         </p>
       ) : (
-        sent && (
+        sent &&
+        !sameRole && (
           <p className="flex flex-wrap items-center gap-1.5 text-on-surface-variant">
             Sent it from Gmail?
             <button
               onClick={() =>
-                markApplied(target, {
-                  email: sent.to,
-                  subject: sent.subject,
-                  via: "gmail",
-                })
+                markApplied(
+                  target,
+                  { email: sent.to, subject: sent.subject, via: "gmail" },
+                  { separate: Boolean(earlier) },
+                )
               }
               className="flex items-center gap-1 rounded border border-accent/60 px-1.5 py-0.5 font-semibold text-accent hover:bg-accent/10"
             >

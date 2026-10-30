@@ -1,91 +1,104 @@
 import { useSyncExternalStore } from "react";
+import { createSyncedList } from "./syncedList";
 import {
   APPLICATIONS_STORAGE_KEY,
   LEGACY_APPLICATIONS_STORAGE_KEY,
   createApplication,
   localApplicationStore,
   mergeApplications,
-  parseCsv,
-  toCsv,
   type Application,
-  type ApplicationStore,
   type ApplicationTarget,
 } from "./applications";
+import { parseTrackerCsv, toTrackerCsv } from "./trackerCsv";
+import { getJobFeedback, importJobFeedback } from "./useJobFeedback";
+import { getApplyAnyway, importApplyAnyway } from "./useApplyAnyway";
 
 // One shared list, so job cards, the send bar and the tracker update together.
-const store: ApplicationStore = localApplicationStore;
-let snapshot: Application[] = store.load();
-const listeners = new Set<() => void>();
-
-const emit = () => listeners.forEach((listener) => listener());
-
-// Another tab changed the list. Listened to for the whole session, not only while a
-// component is mounted, so getApplications() and later saves never use a stale copy.
-if (typeof window !== "undefined") {
-  window.addEventListener("storage", (event) => {
-    // A tab still on the old site version writes the old key; load() moves it over.
-    if (
-      event.key !== APPLICATIONS_STORAGE_KEY &&
-      event.key !== LEGACY_APPLICATIONS_STORAGE_KEY
-    )
-      return;
-    snapshot = store.load();
-    emit();
-  });
-}
-
-// Changes start from what is saved now, so another tab's recent entries are kept.
-const update = (change: (current: Application[]) => Application[]) => {
-  snapshot = change(store.load());
-  store.save(snapshot);
-  emit();
-};
-
-const subscribe = (listener: () => void) => {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-};
-
-const getSnapshot = () => snapshot;
+// A tab still on the old site version writes the legacy key; load() moves it over.
+const list = createSyncedList<Application>(localApplicationStore, [
+  APPLICATIONS_STORAGE_KEY,
+  LEGACY_APPLICATIONS_STORAGE_KEY,
+]);
+const update = list.update;
+const noApplications: Application[] = [];
 
 // Current list for non-React code, e.g. building the model's history.
-export const getApplications = () => snapshot;
-const getServerSnapshot = (): Application[] => [];
+export const getApplications = list.getLive;
+// For sync: live entries plus deletions.
+export const applicationsList = list;
 
+// `separate`: a repost or "Apply anyway" opening, so it's a new application rather
+// than a duplicate of the earlier one for the same role.
 export const markApplied = (
   target: ApplicationTarget,
   extra?: Parameters<typeof createApplication>[1],
+  { separate = false } = {},
 ) => {
-  update(
-    (current) =>
-      mergeApplications(current, [createApplication(target, extra)]).list,
+  const entry = createApplication(target, extra);
+  update((current) =>
+    separate ? [entry, ...current] : mergeApplications(current, [entry]).list,
   );
 };
 
 export const unmarkApplied = (id: string) =>
   update((current) => current.filter((entry) => entry.id !== id));
 
-export const importApplicationsCsv = async (file: File) => {
-  const incoming = parseCsv(await file.text());
-  let counts = { added: 0, skipped: 0 };
-  update((current) => {
-    const { list, added, skipped } = mergeApplications(current, incoming);
-    counts = { added, skipped };
-    return list;
-  });
-  return counts;
+export type TrackerImportCounts = {
+  applications: number;
+  feedback: number;
+  applyAnyway: number;
+  skipped: number;
 };
 
-export const downloadApplicationsCsv = () => {
-  const blob = new Blob([`\uFEFF${toCsv(snapshot)}`], {
+// Imports a tracker CSV: applications, "Not a fit" and "Apply anyway" rows. Duplicates
+// and invalid rows are skipped.
+export const importTrackerCsv = async (
+  file: File,
+): Promise<TrackerImportCounts> => {
+  const incoming = parseTrackerCsv(await file.text());
+  let applications = 0;
+  update((current) => {
+    const result = mergeApplications(current, incoming.applications);
+    applications = result.added;
+    return result.list;
+  });
+  const feedback = importJobFeedback(incoming.feedback);
+  const applyAnyway = importApplyAnyway(incoming.applyAnyway);
+  const total =
+    incoming.applications.length +
+    incoming.feedback.length +
+    incoming.applyAnyway.length +
+    incoming.invalid;
+  return {
+    applications,
+    feedback,
+    applyAnyway,
+    skipped: total - applications - feedback - applyAnyway,
+  };
+};
+
+export const hasTrackerData = (counts: {
+  applications: number;
+  feedback: number;
+  applyAnyway: number;
+}) => counts.applications + counts.feedback + counts.applyAnyway > 0;
+
+// "2026-10-30-1452": local date and time, so every download gets its own file and
+// the newest one is easy to spot.
+export const fileTimestamp = (date = new Date()) => {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}`;
+};
+
+// Saves CSV text as a file (with a BOM, so Excel reads UTF-8 correctly).
+export const downloadCsv = (filename: string, csv: string) => {
+  const blob = new Blob([`\uFEFF${csv}`], {
     type: "text/csv;charset=utf-8",
   });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `akaza-applications-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = filename;
   // Firefox and Safari need the link in the document, and the URL alive until the
   // download has started.
   document.body.appendChild(link);
@@ -94,5 +107,16 @@ export const downloadApplicationsCsv = () => {
   window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
 };
 
+// The tracker backup: applications, "Not a fit" and "Apply anyway" marks.
+export const downloadTrackerCsv = () =>
+  downloadCsv(
+    `akaza-job-tracker-${fileTimestamp()}.csv`,
+    toTrackerCsv({
+      applications: list.getLive(),
+      feedback: getJobFeedback(),
+      applyAnyway: getApplyAnyway(),
+    }),
+  );
+
 export const useApplications = () =>
-  useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  useSyncExternalStore(list.subscribe, list.getLive, () => noApplications);

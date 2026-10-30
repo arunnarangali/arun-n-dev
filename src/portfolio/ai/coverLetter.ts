@@ -8,6 +8,8 @@ export type CoverLetterTarget = {
 };
 
 const PORTFOLIO_URL = "https://arunnarangali.github.io/arun-n-dev/";
+const RESUME_FILE = "ArunCV.pdf";
+export const RESUME_URL = `${PORTFOLIO_URL}${RESUME_FILE}`;
 // Gmail ignores very long compose URLs; past this the body goes via the clipboard.
 export const MAX_COMPOSE_URL_CHARS = 7500;
 
@@ -23,6 +25,7 @@ export const emailSignature = () =>
     socialValue("Secure Line"),
     socialValue("Professional Orbit"),
     `Portfolio: ${PORTFOLIO_URL}`,
+    `Resume: ${RESUME_URL}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -81,4 +84,15 @@ export const composeCoverLetterEmail = (
     .filter((line, index) => !(index === 0 && line === lastLine))
     .join("\n");
   return { subject, body: `${body}\n\n${signature}` };
+};
+
+// Gmail compose links can't carry attachments, so the CV is downloaded for dragging in.
+// TODO: attach it for real by sending through the Gmail API (Google OAuth).
+export const downloadResume = () => {
+  const link = document.createElement("a");
+  link.href = `${import.meta.env.BASE_URL}${RESUME_FILE}`;
+  link.download = RESUME_FILE;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 };

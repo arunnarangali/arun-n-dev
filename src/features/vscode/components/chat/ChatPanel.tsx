@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../Icon";
 import { ChatInput } from "./ChatInput";
-import { ChatMessage } from "./ChatMessage";
+import { ChatMessage, type LetterFold } from "./ChatMessage";
+import { matchApplication } from "../../../../portfolio/ai/applications";
+import { useApplications } from "../../../../portfolio/ai/useApplications";
+import { useApplyAnyway } from "../../../../portfolio/ai/useApplyAnyway";
 import { OwnerVerification } from "./OwnerVerification";
 import { useChat } from "../../../../portfolio/ai/useChat";
 import {
@@ -9,6 +12,7 @@ import {
   findHrEmail,
 } from "../../../../portfolio/ai/chatClient";
 import { matchCoverLetterJob } from "../../../../portfolio/ai/modelHistory";
+import { startTrackerSync } from "../../../../portfolio/ai/trackerSync";
 import { parseChatInput } from "../../../../portfolio/ai/slashCommands";
 import type { ChatMode } from "../../../../portfolio/ai/systemPrompt";
 import { aboutContent } from "../../../../portfolio/content";
@@ -39,8 +43,10 @@ const suggestedPrompts: Record<ChatMode, { label: string; input: string }[]> = {
 
 // Keeps letters parseable for "Send now" (subject line, plain text).
 const COVER_LETTER_FORMAT = [
-  `Reply with only the email: first line "Subject: ...", a blank line, then the letter in plain text (no markdown, no notes), ending with "Best regards," and my name.`,
+  `Reply with only the email: first line "Subject: ...", a blank line, then the letter in plain text (no markdown, no notes), ending with "Best regards," and my name. Keep it under 220 words.`,
   `Use only facts from my profile and keep numbers exact (years of experience, skills). Never round up or invent.`,
+  `Do not state any number, percentage or measured result (like "cut load time by half" or "improved performance by 40%") unless that exact figure is in my profile. Describe the work instead.`,
+  `If the job description from the posting is provided, pick the 2–3 most important requirements or responsibilities and connect each to a real fact from my profile (a project, a company, years with a skill). Mention in one line what the company or team builds, if it says. Never claim a requirement I don't meet: leave it out rather than stretch.`,
 ].join("\n");
 
 const coverLetterTarget = (job: JobListing) => ({
@@ -89,6 +95,12 @@ export const ChatPanel = (props: ChatPanelProps) => {
     else window.sessionStorage.removeItem(PASSCODE_KEY);
     setPasscode(value);
   }, []);
+
+  // Sync the job tracker with other devices while owner mode is unlocked.
+  useEffect(
+    () => (passcode ? startTrackerSync(passcode) : undefined),
+    [passcode],
+  );
 
   const requestUnlock = useCallback(() => setVerifying(true), []);
   const lock = useCallback(() => updatePasscode(""), [updatePasscode]);
@@ -153,6 +165,10 @@ const ChatSession = ({
     jobsBlockedUntil,
     stop,
     clear,
+    suggestion,
+    dismissSuggestion,
+    enhance,
+    enhanceRemaining,
   } = useChat(mode, passcode, onUnauthorized);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isBusy = status !== "idle";
@@ -205,6 +221,64 @@ const ChatSession = ({
     const element = scrollRef.current;
     if (element) element.scrollTop = element.scrollHeight;
   }, [messages]);
+
+  // A finished cover letter folds, together with its request above it, into one
+  // summary card. Applied letters fold by default (also after a reload); the user's
+  // own Show/Hide choice wins. Folding only hides them: the model still sees both.
+  const applications = useApplications();
+  const applyAnywayUrls = useApplyAnyway();
+  const [letterExpanded, setLetterExpanded] = useState<Record<string, boolean>>(
+    {},
+  );
+  const letterFolds = useMemo(() => {
+    const folds = new Map<string, LetterFold>();
+    messages.forEach((message, index) => {
+      const pending = isBusy && index === messages.length - 1;
+      if (
+        !message.coverLetter ||
+        !message.content ||
+        message.incomplete ||
+        pending
+      )
+        return;
+      const match = matchApplication(applications, message.coverLetter, {
+        applyAnyway: applyAnywayUrls,
+      });
+      const applied = match?.status === "applied" ? match.entry : undefined;
+      folds.set(message.id, {
+        collapsed: (letterExpanded[message.id] ?? !applied) === false,
+        applied,
+        onToggle: (expanded) =>
+          setLetterExpanded((current) => ({
+            ...current,
+            [message.id]: expanded,
+          })),
+      });
+    });
+    return folds;
+  }, [messages, isBusy, applications, applyAnywayUrls, letterExpanded]);
+
+  // "Next job" on a folded cover letter: back to the latest results, with a brief
+  // highlight so it's clear where the list is.
+  const hasJobResults = messages.some((message) => message.jobs?.jobs.length);
+  const scrollToJobs = useCallback(() => {
+    const lists =
+      scrollRef.current?.querySelectorAll<HTMLElement>("[data-job-results]");
+    const target = lists?.[lists.length - 1];
+    if (!target) return;
+    const reduceMotion = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    target.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
+    target.classList.remove("chat-highlight");
+    // Restart the animation if it's clicked again quickly.
+    void target.offsetWidth;
+    target.classList.add("chat-highlight");
+    window.setTimeout(() => target.classList.remove("chat-highlight"), 1300);
+  }, []);
 
   const headerButton =
     "rounded p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-accent";
@@ -277,38 +351,59 @@ const ChatSession = ({
             </div>
           </div>
         ) : (
-          messages.map((message, index) => (
-            <ChatMessage
-              key={message.id}
-              message={message}
-              isPending={isBusy && index === messages.length - 1}
-              pendingLabel={
-                status === "searching"
-                  ? "Searching job boards and ranking openings…"
-                  : undefined
-              }
-              isBusy={isBusy}
-              onRefreshJobs={(query) => void searchJobs(query, { fresh: true })}
-              jobsBlockedUntil={jobsBlockedUntil}
-              onDraftCoverLetter={(job) =>
-                void send(coverLetterPrompt(job), {
-                  coverLetter: coverLetterTarget(job),
-                })
-              }
-              onFindHrEmail={(company) =>
-                findHrEmail({ company, passcode }).catch((caught: unknown) => {
-                  // Passcode changed on the server: back to the Akaza screen, like chat does.
-                  if (caught instanceof ChatRequestError && caught.status === 403)
-                    onUnauthorized();
-                  throw caught;
-                })
-              }
-              onOpenFile={(id) => {
-                onOpenFile(id);
-                if (variant === "overlay") onClose();
-              }}
-            />
-          ))
+          messages.map((message, index) => {
+            // A folded letter hides the request that asked for it, too.
+            const next = messages[index + 1];
+            if (
+              message.role === "user" &&
+              next &&
+              letterFolds.get(next.id)?.collapsed
+            )
+              return null;
+            return (
+              <ChatMessage
+                key={message.id}
+                message={message}
+                letter={letterFolds.get(message.id)}
+                isPending={isBusy && index === messages.length - 1}
+                pendingLabel={
+                  status === "searching"
+                    ? "Searching job boards and ranking openings…"
+                    : message.coverLetter && isOwner
+                      ? "Reading the job description…"
+                      : undefined
+                }
+                isBusy={isBusy}
+                onRefreshJobs={(query) =>
+                  void searchJobs(query, { fresh: true })
+                }
+                jobsBlockedUntil={jobsBlockedUntil}
+                onBackToJobs={hasJobResults ? scrollToJobs : undefined}
+                onDraftCoverLetter={(job) =>
+                  void send(coverLetterPrompt(job), {
+                    coverLetter: coverLetterTarget(job),
+                  })
+                }
+                onFindHrEmail={(company) =>
+                  findHrEmail({ company, passcode }).catch(
+                    (caught: unknown) => {
+                      // Passcode changed on the server: back to the Akaza screen, like chat does.
+                      if (
+                        caught instanceof ChatRequestError &&
+                        caught.status === 403
+                      )
+                        onUnauthorized();
+                      throw caught;
+                    },
+                  )
+                }
+                onOpenFile={(id) => {
+                  onOpenFile(id);
+                  if (variant === "overlay") onClose();
+                }}
+              />
+            );
+          })
         )}
         {error && (
           <div className="mx-3 my-3 flex items-start gap-2 rounded border border-error/40 bg-error/10 px-3 py-2 text-[12px] text-on-surface">
@@ -326,6 +421,11 @@ const ChatSession = ({
         onSubmit={handleSubmit}
         onStop={stop}
         focusSignal={focusSignal}
+        suggestion={suggestion?.text}
+        onDismissSuggestion={dismissSuggestion}
+        onEnhance={enhance}
+        // Visitors see how many ✨ uses are left today; the owner has no daily cap.
+        enhanceRemaining={isOwner ? undefined : enhanceRemaining}
       />
     </>
   );

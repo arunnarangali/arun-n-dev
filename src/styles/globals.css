@@ -455,6 +455,37 @@
   }
 }
 
+/* Cover letter collapsing into its summary card, and the job results flash when
+   "Next job" scrolls back to them. */
+@keyframes chat-collapse-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes chat-highlight {
+  from {
+    box-shadow: 0 0 0 2px rgb(var(--c-primary) / 0.6);
+  }
+}
+
+.chat-collapse-in {
+  animation: chat-collapse-in 150ms ease-out;
+}
+
+.chat-highlight {
+  border-radius: 6px;
+  animation: chat-highlight 1.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-collapse-in,
+  .chat-highlight {
+    animation: none;
+  }
+}
+
 .editor-caret {
   width: 2px;
   background: var(--caret-color);

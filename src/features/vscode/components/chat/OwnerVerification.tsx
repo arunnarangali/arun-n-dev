@@ -108,6 +108,7 @@ export const OwnerVerification = ({
 }: OwnerVerificationProps) => {
   const [phase, setPhase] = useState<Phase>("idle");
   const [value, setValue] = useState("");
+  const [showCode, setShowCode] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [voiceOn, setVoiceOn] = useState(readVoiceOn);
   const [lines, setLines] = useState<Line[]>(() => [
@@ -185,6 +186,7 @@ export const OwnerVerification = ({
     }
 
     setValue("");
+    setShowCode(false);
     if (result === "rate-limited") {
       setPhase("lockout");
       say(
@@ -324,20 +326,40 @@ export const OwnerVerification = ({
           >
             Access code
           </label>
-          <input
-            id="akaza-access-code"
-            ref={inputRef}
-            type="password"
-            autoFocus
-            autoComplete="current-password"
-            value={value}
-            disabled={isLocked}
-            onChange={(event) => setValue(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") onCancel();
-            }}
-            className="akaza-input w-full rounded border bg-transparent px-3 py-2 font-mono text-[14px] tracking-[0.4em] text-on-surface outline-none disabled:opacity-50"
-          />
+          <div className="relative">
+            <input
+              id="akaza-access-code"
+              ref={inputRef}
+              type={showCode ? "text" : "password"}
+              autoFocus
+              autoComplete="current-password"
+              spellCheck={false}
+              value={value}
+              disabled={isLocked}
+              onChange={(event) => setValue(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") onCancel();
+              }}
+              className="akaza-input w-full rounded border bg-transparent py-2 pl-3 pr-9 font-mono text-[14px] tracking-[0.4em] text-on-surface outline-none disabled:opacity-50"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setShowCode((current) => !current);
+                inputRef.current?.focus();
+              }}
+              disabled={isLocked}
+              aria-label={showCode ? "Hide access code" : "Show access code"}
+              aria-pressed={showCode}
+              title={showCode ? "Hide access code" : "Show access code"}
+              className="absolute inset-y-0 right-1 my-auto flex h-7 w-7 items-center justify-center rounded text-on-surface-variant transition-colors hover:text-accent disabled:opacity-40"
+            >
+              <Icon
+                name={showCode ? "visibility_off" : "visibility"}
+                className="text-[16px]"
+              />
+            </button>
+          </div>
           <div className="mt-1 h-[2px] w-full overflow-hidden rounded">
             {phase === "verifying" && (
               <div className="akaza-progress h-full w-full" />

@@ -2,7 +2,7 @@
 // to earlier answers, job results and tracked applications.
 import { analyzeJobFit } from "../jobFit";
 import {
-  findApplication,
+  matchApplication,
   formatAppliedDate,
   type Application,
 } from "./applications";
@@ -12,7 +12,8 @@ import {
   MAX_CONTEXT_MESSAGE_CHARS,
   MAX_HISTORY_CHARS,
 } from "./chatLimits";
-import type { JobListing } from "./jobs";
+import type { ApplicationMatch, JobListing } from "./jobs";
+import { findFeedback, reasonLabel, type JobFeedback } from "./jobFeedback";
 
 export type ModelMessage = Pick<ChatMessage, "role" | "content">;
 
@@ -31,28 +32,57 @@ export const rankJobsByFit = (jobs: JobListing[]) =>
     .sort((a, b) => b.fit.score - a.fit.score)
     .map((entry, index) => ({ ...entry, number: index + 1 }));
 
-const describeJobs = (message: ChatMessage, applications: Application[]) => {
+const describeMatch = (match: ApplicationMatch<Application> | undefined) => {
+  if (!match) return "not applied";
+  const date = formatAppliedDate(match.entry.appliedAt);
+  return {
+    applied: `applied ${date}`,
+    sameRole: `applied ${date} (same role, likely the same opening on another site)`,
+    repost: `reposted; applied to an earlier posting on ${date}`,
+    applyAnyway: `not applied; owner says it's a different opening from the one applied to on ${date}`,
+  }[match.status];
+};
+
+const describeJobs = (
+  message: ChatMessage,
+  applications: Application[],
+  feedback: JobFeedback[],
+  applyAnyway: string[],
+) => {
   const result = message.jobs;
   if (!result) return message.content;
   const lines = rankJobsByFit(result.jobs).map(({ job, fit, number }) => {
-    const applied = findApplication(applications, job);
+    const match = matchApplication(applications, job, {
+      applyAnyway,
+    });
+    const notFit = findFeedback(feedback, job);
     return [
       `${number}. ${job.title}`,
       job.company,
       `${job.location || "location n/a"}${job.workMode !== "unknown" ? ` (${job.workMode})` : ""}`,
       job.experience,
       `${fit.score}% fit`,
-      applied
-        ? `applied ${formatAppliedDate(applied.appliedAt)}`
-        : "not applied",
+      describeMatch(match),
+      notFit &&
+        `marked not a fit: ${reasonLabel(notFit.reason)}${notFit.note ? ` ("${notFit.note}")` : ""}`,
       job.url,
     ]
       .filter(Boolean)
       .join(" — ");
   });
+  const skipped = (result.skipped ?? []).map(
+    (entry) =>
+      `- skipped: ${entry.title}${entry.company ? ` — ${entry.company}` : ""} — ${entry.reason}`,
+  );
   return [
     `${message.content} Job search results (each card shows its #number):`,
     ...lines,
+    ...(result.applied
+      ? [`Left out ${result.applied} listing(s) already marked applied.`]
+      : []),
+    ...(skipped.length
+      ? ['Left out because of the owner\'s "Not a fit" feedback:', ...skipped]
+      : []),
   ].join("\n");
 };
 
@@ -73,9 +103,15 @@ const clip = (text: string) =>
     ? `${text.slice(0, MAX_CONTEXT_MESSAGE_CHARS - 20).trimEnd()}\n…(shortened)`
     : text;
 
-const toModelContent = (message: ChatMessage, applications: Application[]) => {
+const toModelContent = (
+  message: ChatMessage,
+  applications: Application[],
+  feedback: JobFeedback[],
+  applyAnyway: string[],
+) => {
   if (message.applications) return describeApplications(applications);
-  if (message.jobs) return describeJobs(message, applications);
+  if (message.jobs)
+    return describeJobs(message, applications, feedback, applyAnyway);
   if (message.incomplete || STOPPED_SUFFIX.test(message.content))
     return `${message.content.replace(STOPPED_SUFFIX, "").trimEnd()}\n(answer was cut off)`;
   return message.content;
@@ -86,10 +122,17 @@ const toModelContent = (message: ChatMessage, applications: Application[]) => {
 export const buildModelHistory = (
   messages: ChatMessage[],
   applications: Application[] = [],
+  feedback: JobFeedback[] = [],
+  applyAnyway: string[] = [],
 ): ModelMessage[] => {
   const kept = messages.filter((message) => message.content.trim());
   const converted = kept.map((message, index) => {
-    const content = toModelContent(message, applications);
+    const content = toModelContent(
+      message,
+      applications,
+      feedback,
+      applyAnyway,
+    );
     return {
       role: message.role,
       content: index === kept.length - 1 ? content : clip(content),

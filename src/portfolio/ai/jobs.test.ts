@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { buildJobQueries, classifyLocation, classifyRoles, MAX_JOBS, pageMentionsDate, pickHrEmail, sanitizeJobs } from './jobs'
+import { buildJobQueries, classifyLocation, classifyRoles, describeJobResult, MAX_JOBS, pageMentionsDate, parseAppliedJobs, parsePreferences, pickHrEmail, sanitizeJobs, sanitizeSkipped } from './jobs'
 import { buildGmailComposeUrl, composeCoverLetterEmail, parseCoverLetter } from './coverLetter'
 import { parseChatInput } from './slashCommands'
 import { handleChatRequest, resetJobSearchState } from '../../../worker/chat'
@@ -148,6 +148,84 @@ describe('worker job search', () => {
     expect(fetchSpy.mock.calls.length).toBeGreaterThan(calls)
   })
 
+  it('leaves out only the exact applied postings, even from the cache', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) =>
+      String(input).endsWith('/api/web_search')
+        ? Response.json({
+            results: ['1', '2', '3'].map((id) => ({ title: 'Job', url: `https://example.com/jobs/${id}`, content: 'React job' })),
+          })
+        : Response.json({
+            message: {
+              content: JSON.stringify({
+                jobs: [
+                  job(),
+                  job({ url: 'https://example.com/jobs/2', company: 'Beta', title: 'Sr. Front End Developer' }),
+                  job({ url: 'https://example.com/jobs/3', company: 'Gamma' }),
+                ],
+              }),
+            },
+          }),
+    )
+    const first = await (
+      await post({ jobs: { applied: [{ company: 'Other', title: 'x', url: 'https://example.com/jobs/1' }] } }, 'open-sesame')
+    ).json()
+    expect(first.jobs.map((entry: { company: string }) => entry.company)).toEqual(['Beta', 'Gamma'])
+    expect(first.applied).toBe(1)
+
+    // Applied later: left out of the cached result too. A same-role match on another
+    // board stays, so the chat can show it and offer "Apply anyway".
+    const applied = [
+      { company: 'Other', title: 'x', url: 'https://example.com/jobs/1' },
+      { company: 'Gamma', title: 'React Developer', url: 'https://example.com/jobs/3' },
+      { company: 'beta', title: 'Senior Frontend Developer', url: 'https://elsewhere.dev/9' },
+    ]
+    const second = await (await post({ jobs: { applied } }, 'open-sesame')).json()
+    expect(second).toMatchObject({ cached: true, applied: 2 })
+    expect(second.jobs.map((entry: { company: string }) => entry.company)).toEqual(['Beta'])
+
+    const none = await (await post({ jobs: {} }, 'open-sesame')).json()
+    expect(none.jobs).toHaveLength(3)
+    expect(none.applied).toBeUndefined()
+  })
+
+  it('rejects a malformed applied list without searching', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
+    for (const applied of ['x', [{ company: 'A' }], Array(101).fill({ company: 'A', title: 'B', url: 'C' })])
+      expect((await post({ jobs: { applied } }, 'open-sesame')).status).toBe(400)
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it('rejects malformed feedback without searching', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
+    for (const preferences of ['skip seniors', [1], Array(11).fill('x'), ['x'.repeat(151)]])
+      expect((await post({ jobs: { preferences } }, 'open-sesame')).status).toBe(400)
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it('sends feedback to the extractor, reports skipped jobs and caches per feedback', async () => {
+    const prompts: string[] = []
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      if (String(input).endsWith('/api/web_search'))
+        return Response.json({ results: [{ title: 'React Dev', url: 'https://example.com/jobs/1', content: 'React job' }] })
+      prompts.push(JSON.parse(String(init?.body)).messages[0].content)
+      return Response.json({
+        message: { content: JSON.stringify({ jobs: [job()], skipped: [{ title: 'Staff Engineer', company: 'Big', reason: 'above experience' }, { title: '' }] }) },
+      })
+    })
+    const preferences = ['Above my experience, e.g. Staff Engineer at Big']
+    const data = await (await post({ jobs: { preferences } }, 'open-sesame')).json()
+    expect(prompts[0]).toContain('- Above my experience, e.g. Staff Engineer at Big')
+    expect(data).toMatchObject({ preferences, skipped: [{ title: 'Staff Engineer', company: 'Big', reason: 'above experience' }] })
+
+    const calls = fetchSpy.mock.calls.length
+    expect((await (await post({ jobs: { preferences } }, 'open-sesame')).json()).cached).toBe(true)
+    expect(fetchSpy).toHaveBeenCalledTimes(calls)
+    const plain = await (await post({ jobs: {} }, 'open-sesame')).json()
+    expect(plain.cached).toBeUndefined()
+    expect(plain.skipped).toBeUndefined()
+    expect(prompts.at(-1)).not.toContain('not a fit')
+  })
+
   it('looks up HR emails once per company', async () => {
     expect((await post({ hrEmail: { company: 'Acme' } })).status).toBe(403)
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
@@ -236,6 +314,46 @@ describe('worker job search', () => {
   })
 })
 
+describe('job feedback helpers', () => {
+  it('parses feedback lists', () => {
+    expect(parsePreferences(undefined)).toEqual([])
+    expect(parsePreferences([' a  b ', 'a b', ''])).toEqual(['a b'])
+    expect(parsePreferences('a')).toBeNull()
+  })
+
+  it('keeps only skipped entries with a title and reason', () => {
+    expect(sanitizeSkipped({ skipped: [{ title: 'A', reason: 'r' }, { title: 'B' }, null] })).toEqual([{ title: 'A', company: '', reason: 'r' }])
+    expect(sanitizeSkipped(null)).toEqual([])
+  })
+
+  it('parses applied lists', () => {
+    expect(parseAppliedJobs(undefined)).toEqual([])
+    expect(parseAppliedJobs([{ company: 'A', title: 'B', url: 'C', extra: 1 }])).toEqual([{ company: 'A', title: 'B', url: 'C' }])
+    expect(parseAppliedJobs([{ company: 'A', title: 1, url: 'C' }])).toBeNull()
+    // Long text (e.g. from a CSV import) is cut to size, not rejected.
+    expect(parseAppliedJobs([{ company: 'A'.repeat(200), title: 'T'.repeat(300), url: 'u' }])).toEqual([
+      { company: 'A'.repeat(80), title: 'T'.repeat(120), url: 'u' },
+    ])
+  })
+
+  it('mentions applied jobs left out in the reply', () => {
+    const text = describeJobResult({ query: '', queries: [], searchedAt: '', jobs: [], applied: 2 })
+    expect(text).toContain("Left out 2 you've already applied to.")
+  })
+
+  it('mentions feedback and skipped jobs in the reply', () => {
+    const base = { query: '', queries: [], searchedAt: '', jobs: [] }
+    expect(describeJobResult(base)).toBe('No matching job openings found right now.')
+    const text = describeJobResult({
+      ...base,
+      preferences: ['x'],
+      skipped: [{ title: 'Staff Engineer', company: 'Big', reason: 'above experience' }],
+    })
+    expect(text).toContain('Used 1 feedback note')
+    expect(text).toContain('Skipped 1 based on your "Not a fit" feedback: Staff Engineer at Big (above experience).')
+  })
+})
+
 describe('cover letter email', () => {
   const target = { title: 'React Developer', company: 'Acme', url: 'https://example.com/jobs/1', email: '' }
 
@@ -253,6 +371,7 @@ describe('cover letter email', () => {
     expect(body.match(/Arun N/g)).toHaveLength(1)
     expect(body).toContain('linkedin.com/in/arun-narangali')
     expect(body).toContain('Portfolio: https://arunnarangali.github.io/arun-n-dev/')
+    expect(body).toContain('Resume: https://arunnarangali.github.io/arun-n-dev/ArunCV.pdf')
   })
 
   it('builds a Gmail compose URL for the owner account', () => {

@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "../Icon";
 import { matchSlashCommands } from "../../../../portfolio/ai/slashCommands";
 import { MAX_MESSAGE_CHARS } from "../../../../portfolio/ai/chatLimits";
+import type { EnhanceResult } from "../../../../portfolio/ai/chatClient";
+import {
+  MIN_ENHANCE_CHARS,
+  VISITOR_DAILY_LIMIT,
+} from "../../../../portfolio/ai/promptTools";
 
 type ChatInputProps = {
   isBusy: boolean;
@@ -9,7 +14,28 @@ type ChatInputProps = {
   onSubmit: (text: string) => void;
   onStop: () => void;
   focusSignal?: number;
+  // Likely reply to the assistant's question; shown as ghost text that Tab accepts.
+  suggestion?: string;
+  onDismissSuggestion?: () => void;
+  // ✨ Improve my message.
+  onEnhance?: (text: string) => Promise<EnhanceResult>;
+  // Visitors' ✨ uses left today (null: not known yet). Undefined for the owner.
+  enhanceRemaining?: number | null;
 };
+
+// What the line under the input says after ✨.
+type EnhanceNote =
+  | { kind: "improved"; original: string }
+  | { kind: "unchanged" }
+  | { kind: "error"; message: string };
+
+// Touch screens have no Tab key, so the suggestion is also offered as a chip there.
+const isTouchScreen = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia?.("(pointer: coarse)").matches === true;
+
+// The textarea and the ghost-text mirror must lay text out identically.
+const textClass = "text-[13px] leading-5 whitespace-pre-wrap break-words";
 
 export const ChatInput = ({
   isBusy,
@@ -17,8 +43,16 @@ export const ChatInput = ({
   onSubmit,
   onStop,
   focusSignal,
+  suggestion = "",
+  onDismissSuggestion,
+  onEnhance,
+  enhanceRemaining,
 }: ChatInputProps) => {
   const [value, setValue] = useState("");
+  const [enhancing, setEnhancing] = useState(false);
+  const [note, setNote] = useState<EnhanceNote | null>(null);
+  const [isTouch] = useState(isTouchScreen);
+  const mirrorRef = useRef<HTMLDivElement>(null);
   // Highlighted suggestion, and whether Esc closed the list for the current text.
   const [activeIndex, setActiveIndex] = useState(0);
   const [dismissed, setDismissed] = useState(false);
@@ -33,21 +67,83 @@ export const ChatInput = ({
     setValue(next);
     setActiveIndex(0);
     setDismissed(false);
+    setNote(null);
+  };
+
+  // The rest of the suggestion after what's typed, if what's typed is its start.
+  const ghost = (() => {
+    if (!suggestion || isBusy || enhancing || isListOpen) return "";
+    if (!value) return suggestion;
+    return value.length < suggestion.length &&
+      suggestion.toLowerCase().startsWith(value.toLowerCase())
+      ? suggestion.slice(value.length)
+      : "";
+  })();
+
+  const acceptSuggestion = () => {
+    updateValue(value + ghost);
+    textareaRef.current?.focus();
+  };
+
+  const isVisitor = enhanceRemaining !== undefined;
+  const outOfEnhances = isVisitor && enhanceRemaining === 0;
+  const canEnhance =
+    Boolean(onEnhance) &&
+    !isBusy &&
+    !enhancing &&
+    !outOfEnhances &&
+    value.trim().length >= MIN_ENHANCE_CHARS &&
+    !value.trimStart().startsWith("/");
+  const enhanceTitle = outOfEnhances
+    ? `Daily limit reached (${VISITOR_DAILY_LIMIT} a day)`
+    : `Improve my message: fix spelling and make it clearer (Ctrl+I)${
+        isVisitor
+          ? ` · ${enhanceRemaining ?? VISITOR_DAILY_LIMIT} of ${VISITOR_DAILY_LIMIT} left today`
+          : ""
+      }`;
+
+  // The text is read-only while ✨ runs, so the result can safely replace it.
+  const runEnhance = async () => {
+    if (!canEnhance || !onEnhance) return;
+    const original = value;
+    setEnhancing(true);
+    setNote(null);
+    try {
+      const result = await onEnhance(original);
+      if (result.changed) {
+        setValue(result.text);
+        setNote({ kind: "improved", original });
+      } else setNote({ kind: "unchanged" });
+    } catch (caught) {
+      setNote({
+        kind: "error",
+        message:
+          caught instanceof Error ? caught.message : "Couldn't improve right now.",
+      });
+    } finally {
+      setEnhancing(false);
+      textareaRef.current?.focus();
+    }
   };
 
   useEffect(() => {
     textareaRef.current?.focus();
   }, [focusSignal]);
 
+  // Grow with the text, or with the ghost text when it's longer.
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = "auto";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
-  }, [value]);
+    const height = Math.max(
+      textarea.scrollHeight,
+      ghost ? (mirrorRef.current?.scrollHeight ?? 0) : 0,
+    );
+    textarea.style.height = `${Math.min(height, 160)}px`;
+  }, [value, ghost]);
 
   const submit = () => {
-    if (!value.trim() || isBusy) return;
+    if (!value.trim() || isBusy || enhancing) return;
     onSubmit(value);
     updateValue("");
   };
@@ -61,6 +157,25 @@ export const ChatInput = ({
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "i") {
+      event.preventDefault();
+      void runEnhance();
+      return;
+    }
+    if (ghost) {
+      const atEnd = event.currentTarget.selectionStart === value.length;
+      if ((event.key === "Tab" && !event.shiftKey) || (event.key === "ArrowRight" && atEnd)) {
+        event.preventDefault();
+        acceptSuggestion();
+        return;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        onDismissSuggestion?.();
+        return;
+      }
+    }
     if (active) {
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
@@ -132,22 +247,67 @@ export const ChatInput = ({
           </p>
         </div>
       )}
+      {ghost && isTouch && (
+        <button
+          onClick={acceptSuggestion}
+          className="mb-1.5 flex max-w-full items-center gap-1 rounded-full border border-outline-variant px-2 py-0.5 text-left text-[12px] text-on-surface-variant hover:border-primary hover:text-accent"
+        >
+          <Icon name="subdirectory_arrow_right" className="text-[13px]" />
+          <span className="truncate">{suggestion}</span>
+        </button>
+      )}
       <div className="flex items-end gap-2 rounded-md border border-outline-variant bg-surface-container px-2 py-1.5 focus-within:border-primary">
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(event) => updateValue(event.target.value)}
-          aria-controls={isListOpen ? "chat-slash-commands" : undefined}
-          aria-activedescendant={
-            active ? `chat-slash-${active.name}` : undefined
-          }
-          onKeyDown={handleKeyDown}
-          rows={1}
-          placeholder={placeholder}
-          aria-label="Chat message"
-          maxLength={MAX_MESSAGE_CHARS}
-          className="max-h-40 flex-1 resize-none bg-transparent text-[13px] text-on-surface outline-none placeholder:text-on-surface-variant/60"
-        />
+        <div className="relative min-w-0 flex-1">
+          {ghost && (
+            <div
+              ref={mirrorRef}
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-0 ${textClass}`}
+            >
+              <span className="invisible">{value}</span>
+              <span className="text-on-surface-variant/50">{ghost}</span>
+              <span className="ml-1.5 rounded border border-outline-variant px-1 align-middle text-[9px] text-on-surface-variant/70">
+                Tab
+              </span>
+            </div>
+          )}
+          <textarea
+            ref={textareaRef}
+            value={value}
+            onChange={(event) => updateValue(event.target.value)}
+            aria-controls={isListOpen ? "chat-slash-commands" : undefined}
+            aria-activedescendant={
+              active ? `chat-slash-${active.name}` : undefined
+            }
+            aria-describedby={ghost ? "chat-suggestion-hint" : undefined}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            readOnly={enhancing}
+            placeholder={ghost ? "" : placeholder}
+            aria-label="Chat message"
+            maxLength={MAX_MESSAGE_CHARS}
+            className={`relative block max-h-40 w-full resize-none bg-transparent text-on-surface outline-none placeholder:text-on-surface-variant/60 ${textClass} ${enhancing ? "opacity-60" : ""}`}
+          />
+          {ghost && (
+            <span id="chat-suggestion-hint" className="sr-only">
+              Suggested reply: {suggestion}. Press Tab to use it.
+            </span>
+          )}
+        </div>
+        {onEnhance && (
+          <button
+            onClick={() => void runEnhance()}
+            disabled={!canEnhance}
+            className="rounded p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-accent disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
+            title={enhanceTitle}
+            aria-label={enhanceTitle}
+          >
+            <Icon
+              name={enhancing ? "progress_activity" : "auto_awesome"}
+              className={`text-[17px] ${enhancing ? "animate-spin" : ""}`}
+            />
+          </button>
+        )}
         {isBusy ? (
           <button
             onClick={onStop}
@@ -159,7 +319,7 @@ export const ChatInput = ({
         ) : (
           <button
             onClick={submit}
-            disabled={!value.trim()}
+            disabled={!value.trim() || enhancing}
             className="rounded p-1 text-primary transition-colors hover:bg-surface-container-high disabled:text-on-surface-variant/40"
             title="Send (Enter)"
           >
@@ -167,6 +327,34 @@ export const ChatInput = ({
           </button>
         )}
       </div>
+      {note && (
+        <p
+          className={`mt-1 flex items-center gap-1.5 px-1 text-[11px] ${note.kind === "error" ? "text-error" : "text-on-surface-variant"}`}
+          role="status"
+        >
+          <Icon
+            name={note.kind === "error" ? "error" : "auto_awesome"}
+            className="text-[13px]"
+          />
+          {note.kind === "improved" && (
+            <>
+              Improved
+              <button
+                onClick={() => {
+                  setValue(note.original);
+                  setNote(null);
+                  textareaRef.current?.focus();
+                }}
+                className="text-primary hover:text-accent"
+              >
+                Undo
+              </button>
+            </>
+          )}
+          {note.kind === "unchanged" && "Already looks good."}
+          {note.kind === "error" && note.message}
+        </p>
+      )}
       {value.length > MAX_MESSAGE_CHARS - 500 && (
         <p
           className={`mt-1 px-1 text-right text-[10px] ${value.length >= MAX_MESSAGE_CHARS ? "text-error" : "text-on-surface-variant"}`}
@@ -175,7 +363,9 @@ export const ChatInput = ({
         </p>
       )}
       <p className="mt-1 px-1 text-[10px] text-on-surface-variant/70">
-        Type / for commands · Shift+Enter for a new line · AI can make mistakes
+        {ghost
+          ? "Tab to use the suggestion · Esc to dismiss · AI can make mistakes"
+          : "Type / for commands · Shift+Enter for a new line · AI can make mistakes"}
       </p>
     </div>
   );

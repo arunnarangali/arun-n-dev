@@ -1,5 +1,12 @@
 import type { ChatMode } from "./systemPrompt";
-import type { JobSearchResult } from "./jobs";
+import {
+  parseJobDescriptionHeader,
+  type AppliedJob,
+  type JobContext,
+  type JobDescriptionStatus,
+  type JobSearchResult,
+} from "./jobs";
+import type { SyncRecord, TrackerDoc, TrackerLists } from "./trackerDoc";
 import type { CoverLetterTarget } from "./coverLetter";
 
 export type ChatRole = "user" | "assistant";
@@ -16,6 +23,8 @@ export type ChatMessage = {
   applications?: true;
   // The answer was stopped or failed mid-stream.
   incomplete?: true;
+  // Cover letters: whether the posting's full job description was read.
+  jobDescription?: JobDescriptionStatus;
 };
 
 // Paste your Cloudflare Worker URL here after `npx wrangler deploy` (see worker/README.md),
@@ -50,6 +59,7 @@ type OllamaChunk = {
 };
 
 export type StreamEvent =
+  | { type: "meta"; jobDescription: JobDescriptionStatus }
   | { type: "token"; text: string }
   | { type: "thinking" }
   | { type: "done" };
@@ -92,6 +102,8 @@ type StreamChatOptions = {
   mode: ChatMode;
   passcode?: string;
   signal?: AbortSignal;
+  // Cover letters: the posting, so the Worker can read its job description.
+  jobContext?: JobContext;
 };
 
 const requestHeaders = (passcode?: string): Record<string, string> =>
@@ -144,11 +156,17 @@ export const findJobs = async ({
   query,
   passcode,
   fresh = false,
+  preferences = [],
+  applied = [],
   signal,
 }: {
   query: string;
   passcode: string;
   fresh?: boolean;
+  // "Not a fit" feedback lines, so the search leaves out similar openings.
+  preferences?: string[];
+  // Roles already marked applied, so the search leaves them out.
+  applied?: AppliedJob[];
   signal?: AbortSignal;
 }): Promise<JobSearchResult> => {
   if (!CHAT_API_URL)
@@ -156,11 +174,98 @@ export const findJobs = async ({
   const response = await fetch(CHAT_API_URL, {
     method: "POST",
     headers: requestHeaders(passcode),
-    body: JSON.stringify({ jobs: fresh ? { query, fresh } : { query } }),
+    body: JSON.stringify({
+      jobs: {
+        query,
+        ...(fresh ? { fresh } : {}),
+        ...(preferences.length ? { preferences } : {}),
+        ...(applied.length ? { applied } : {}),
+      },
+    }),
     signal,
   });
   if (!response.ok) throw await requestError(response);
   return (await response.json()) as JobSearchResult;
+};
+
+export type EnhanceResult = {
+  text: string;
+  changed: boolean;
+  // Uses left today; only sent for visitors.
+  remaining?: number;
+};
+
+const toolRequest = async <T,>(
+  body: unknown,
+  passcode?: string,
+  signal?: AbortSignal,
+): Promise<T> => {
+  if (!CHAT_API_URL)
+    throw new ChatRequestError("Chat isn't set up on this site yet.", 503);
+  const response = await fetch(CHAT_API_URL, {
+    method: "POST",
+    headers: requestHeaders(passcode),
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!response.ok) throw await requestError(response);
+  return (await response.json()) as T;
+};
+
+// ✨ Improve my message: fixes spelling and makes the draft clearer.
+export const enhancePrompt = (text: string, passcode?: string) =>
+  toolRequest<EnhanceResult>({ enhance: { text } }, passcode);
+
+// The likely reply to the assistant's last question, for Tab to accept.
+export const suggestReply = (
+  messages: Pick<ChatMessage, "role" | "content">[],
+  passcode?: string,
+  signal?: AbortSignal,
+) =>
+  toolRequest<{ suggestion: string; remaining?: number }>(
+    { suggest: { messages } },
+    passcode,
+    signal,
+  );
+
+// Tracker sync always uses the live Worker, so localhost and the live site share one
+// tracker. `VITE_TRACKER_SYNC=off` in .env.local turns it off, e.g. to test without
+// touching real data.
+export const TRACKER_API_URL =
+  import.meta.env.VITE_TRACKER_SYNC === "off" ? "" : PRODUCTION_CHAT_URL;
+
+export type TrackerSaveResult =
+  | { status: "saved"; version: number }
+  | { status: "conflict"; current: TrackerDoc };
+
+const trackerRequest = (passcode: string, tracker: unknown) =>
+  fetch(TRACKER_API_URL, {
+    method: "POST",
+    headers: requestHeaders(passcode),
+    body: JSON.stringify({ tracker }),
+  });
+
+// Owner only: the synced job tracker document.
+export const fetchTracker = async (passcode: string): Promise<TrackerDoc> => {
+  const response = await trackerRequest(passcode, { get: true });
+  if (!response.ok) throw await requestError(response);
+  return (await response.json()) as TrackerDoc;
+};
+
+// Saves the tracker if no other device saved since `baseVersion`.
+export const saveTracker = async (
+  passcode: string,
+  lists: TrackerLists<SyncRecord, SyncRecord, SyncRecord>,
+  baseVersion: number,
+): Promise<TrackerSaveResult> => {
+  const response = await trackerRequest(passcode, { put: lists, baseVersion });
+  if (response.status === 409) {
+    const data = (await response.json()) as { current: TrackerDoc };
+    return { status: "conflict", current: data.current };
+  }
+  if (!response.ok) throw await requestError(response);
+  const data = (await response.json()) as { version: number };
+  return { status: "saved", version: data.version };
 };
 
 export type HrEmailResult = { email: string; source: string; cached?: boolean };
@@ -189,6 +294,7 @@ export async function* streamChat({
   mode,
   passcode,
   signal,
+  jobContext,
 }: StreamChatOptions) {
   if (!CHAT_API_URL)
     throw new ChatRequestError("Chat isn't set up on this site yet.", 503);
@@ -198,11 +304,16 @@ export async function* streamChat({
     body: JSON.stringify({
       mode,
       messages: messages.map(({ role, content }) => ({ role, content })),
+      ...(jobContext && mode === "owner" ? { jobContext } : {}),
     }),
     signal,
   });
 
   if (!response.ok || !response.body) throw await requestError(response);
 
+  const jobDescription = parseJobDescriptionHeader(
+    response.headers.get("X-Job-Description"),
+  );
+  if (jobDescription) yield { type: "meta", jobDescription } as StreamEvent;
   yield* parseNdjsonStream(response.body);
 }

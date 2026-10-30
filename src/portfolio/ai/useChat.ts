@@ -1,16 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ChatRequestError,
+  enhancePrompt,
   findJobs,
   streamChat,
+  suggestReply,
   type ChatMessage,
 } from "./chatClient";
-import { describeJobResult, formatWait } from "./jobs";
+import { endsWithQuestion, SUGGEST_TURNS } from "./promptTools";
+import {
+  clipAppliedJob,
+  describeJobResult,
+  formatWait,
+  MAX_APPLIED_SENT,
+} from "./jobs";
 import { buildModelHistory } from "./modelHistory";
 import { getApplications } from "./useApplications";
+import { summarizeFeedback } from "./jobFeedback";
+import { getJobFeedback } from "./useJobFeedback";
+import { getApplyAnyway } from "./useApplyAnyway";
 import type { ChatMode } from "./systemPrompt";
 
 export type ChatStatus = "idle" | "thinking" | "streaming" | "searching";
+
+// A likely reply to the assistant's question, offered as ghost text Tab accepts.
+export type ChatSuggestion = { forMessageId: string; text: string };
 
 const storageKey = (mode: ChatMode) => `vscode-chat-history-${mode}`;
 // When Ollama's web-search quota runs out, job searches pause until this time (ms).
@@ -49,12 +63,71 @@ export const useChat = (
   const [jobsBlockedUntil, setJobsBlockedUntil] =
     useState(readJobsBlockedUntil);
   const abortRef = useRef<AbortController | null>(null);
+  const [suggestion, setSuggestion] = useState<ChatSuggestion | null>(null);
+  const suggestAbortRef = useRef<AbortController | null>(null);
+  // Set when the suggestion quota runs out, so no more requests are sent until then.
+  const suggestBlockedUntilRef = useRef(0);
+  // ✨ uses left today (visitors only); null until the server says.
+  const [enhanceRemaining, setEnhanceRemaining] = useState<number | null>(
+    null,
+  );
+
+  const dropSuggestion = useCallback(() => {
+    suggestAbortRef.current?.abort();
+    suggestAbortRef.current = null;
+    setSuggestion(null);
+  }, []);
+
+  // Only answers that end with a question get a suggestion, so most answers cost
+  // no extra AI call. Failures are silent: the ghost text just doesn't appear.
+  const requestSuggestion = useCallback(
+    async (turns: Pick<ChatMessage, "role" | "content">[], forMessageId: string) => {
+      if (suggestBlockedUntilRef.current > Date.now()) return;
+      const controller = new AbortController();
+      suggestAbortRef.current = controller;
+      try {
+        const result = await suggestReply(turns, passcode, controller.signal);
+        if (!controller.signal.aborted && result.suggestion)
+          setSuggestion({ forMessageId, text: result.suggestion });
+      } catch (caught) {
+        if (caught instanceof ChatRequestError && caught.status === 429)
+          suggestBlockedUntilRef.current =
+            Date.now() + (caught.retryAfter || 60) * 1000;
+      } finally {
+        if (suggestAbortRef.current === controller)
+          suggestAbortRef.current = null;
+      }
+    },
+    [passcode],
+  );
+
+  const enhance = useCallback(
+    async (text: string) => {
+      try {
+        const result = await enhancePrompt(text, passcode);
+        if (typeof result.remaining === "number")
+          setEnhanceRemaining(result.remaining);
+        return result;
+      } catch (caught) {
+        if (caught instanceof ChatRequestError && caught.status === 429)
+          setEnhanceRemaining(0);
+        throw caught;
+      }
+    },
+    [passcode],
+  );
 
   useEffect(() => {
     window.localStorage.setItem(storageKey(mode), JSON.stringify(messages));
   }, [messages, mode]);
 
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(
+    () => () => {
+      abortRef.current?.abort();
+      suggestAbortRef.current?.abort();
+    },
+    [],
+  );
 
   const send = useCallback(
     async (
@@ -72,15 +145,19 @@ export const useChat = (
       const history = buildModelHistory(
         [...messages, userMessage],
         getApplications(),
+        getJobFeedback(),
+        getApplyAnyway(),
       );
 
       setError("");
+      dropSuggestion();
       setMessages((current) => [
         ...current,
         userMessage,
         { id: assistantId, role: "assistant", content: "", coverLetter },
       ]);
       setStatus("thinking");
+      let answer = "";
 
       const controller = new AbortController();
       abortRef.current = controller;
@@ -99,12 +176,38 @@ export const useChat = (
           mode,
           passcode,
           signal: controller.signal,
+          jobContext: coverLetter
+            ? {
+                url: coverLetter.url,
+                title: coverLetter.title,
+                company: coverLetter.company,
+              }
+            : undefined,
         })) {
+          if (event.type === "meta") {
+            const { jobDescription } = event;
+            setMessages((current) =>
+              current.map((message) =>
+                message.id === assistantId
+                  ? { ...message, jobDescription }
+                  : message,
+              ),
+            );
+          }
           if (event.type === "token") {
             setStatus("streaming");
+            answer += event.text;
             appendToAssistant(event.text);
           }
         }
+        if (endsWithQuestion(answer))
+          // Only the last few turns are used for a suggestion; don't send the rest.
+          void requestSuggestion(
+            [...history, { role: "assistant" as const, content: answer }].slice(
+              -SUGGEST_TURNS,
+            ),
+            assistantId,
+          );
       } catch (caught) {
         // An unfinished answer (stopped or failed, even before the first word) can't be
         // sent as a letter.
@@ -136,7 +239,7 @@ export const useChat = (
         setStatus("idle");
       }
     },
-    [messages, mode, onUnauthorized, passcode],
+    [messages, mode, onUnauthorized, passcode, dropSuggestion, requestSuggestion],
   );
 
   const blockJobSearch = useCallback((seconds: number) => {
@@ -165,6 +268,7 @@ export const useChat = (
       };
       const assistantId = createId();
       setError("");
+      dropSuggestion();
       setMessages((current) => [
         ...current,
         userMessage,
@@ -179,6 +283,12 @@ export const useChat = (
           query,
           passcode,
           fresh,
+          preferences: summarizeFeedback(getJobFeedback()),
+          // Newest first, so the most recent applications are the ones sent.
+          applied: [...getApplications()]
+            .sort((a, b) => b.appliedAt.localeCompare(a.appliedAt))
+            .slice(0, MAX_APPLIED_SENT)
+            .map(clipAppliedJob),
           signal: controller.signal,
         });
         setMessages((current) =>
@@ -226,6 +336,7 @@ export const useChat = (
     },
     [
       blockJobSearch,
+      dropSuggestion,
       jobsBlockedUntil,
       messages,
       mode,
@@ -253,9 +364,10 @@ export const useChat = (
 
   const clear = useCallback(() => {
     abortRef.current?.abort();
+    dropSuggestion();
     setMessages([]);
     setError("");
-  }, []);
+  }, [dropSuggestion]);
 
   return {
     messages,
@@ -267,5 +379,9 @@ export const useChat = (
     jobsBlockedUntil,
     stop,
     clear,
+    suggestion,
+    dismissSuggestion: dropSuggestion,
+    enhance,
+    enhanceRemaining,
   };
 };

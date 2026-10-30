@@ -1,3 +1,9 @@
 name = "arun-portfolio-chat"
 main = "chat.ts"
 compatibility_date = "2026-10-01"
+
+# Synced job tracker (see worker/README.md, "Tracker sync"). Create the namespace once
+# with `npx wrangler kv namespace create TRACKER` and paste its id below.
+[[kv_namespaces]]
+binding = "TRACKER"
+id = "46fd5d5da3c34441913151f3786a737d"

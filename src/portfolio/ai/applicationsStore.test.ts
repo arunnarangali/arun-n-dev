@@ -28,6 +28,15 @@ describe('applications store across tabs', () => {
     expect(saved.map((entry) => entry.company).sort()).toEqual(['Acme', 'Capco'])
   })
 
+  it('adds a repost as a separate application instead of merging it', () => {
+    otherTabSaves([createApplication({ company: 'Capco', title: 'React Developer', url: 'https://a.dev/1' })])
+    store.markApplied({ company: 'Capco', title: 'React Developer', url: 'https://naukri.com/2' }, {}, { separate: true })
+    expect(store.getApplications().map((entry) => entry.url)).toEqual(['https://naukri.com/2', 'https://a.dev/1'])
+    // Marking the same posting again doesn't add a duplicate.
+    store.markApplied({ company: 'Capco', title: 'React Developer', url: 'https://naukri.com/2' })
+    expect(store.getApplications()).toHaveLength(2)
+  })
+
   it('picks up other tabs\' changes while nothing is mounted', () => {
     otherTabSaves([createApplication({ company: 'Beta', title: 'Go Engineer', url: 'https://c.dev/3' })])
     fakeWindow.dispatchEvent(Object.assign(new Event('storage'), { key: APPLICATIONS_STORAGE_KEY }))

@@ -7,6 +7,7 @@ import { getFileById } from '../../features/vscode/data/files'
 import { handleChatRequest, MessageTooLongError, parseMessages } from '../../../worker/chat'
 import { buildModelHistory, matchCoverLetterJob, rankJobsByFit } from './modelHistory'
 import { createApplication } from './applications'
+import { createJobFeedback } from './jobFeedback'
 import { HISTORY_LIMIT, MAX_CONTEXT_MESSAGE_CHARS, MAX_HISTORY_CHARS, MAX_MESSAGE_CHARS } from './chatLimits'
 import type { ChatMessage } from './chatClient'
 import type { JobListing } from './jobs'
@@ -163,6 +164,27 @@ describe('buildModelHistory', () => {
     expect(jobs).toMatch(/1\. React Developer — Capco — Bengaluru \(onsite\) — 2-4 years — \d+% fit — applied/)
     expect(jobs).toMatch(/2\. Golang Engineer — Beta — Remote \(remote\).*not applied/)
     expect(history.at(-1)?.content).toBe('Which ones are remote?')
+  })
+
+  it('tells the model about same-role, repost and apply-anyway matches', () => {
+    const appliedOn = new Date(Date.now() - 10 * 24 * 60 * 60_000)
+    const applied = [
+      createApplication({ company: 'Capco', title: 'React Developer', url: 'https://naukri.com/capco' }, {}, appliedOn),
+      createApplication({ company: 'Beta', title: 'Golang Engineer', url: 'https://naukri.com/beta' }, {}, appliedOn),
+    ]
+    const messages: ChatMessage[] = [{ id: 'u1', role: 'user', content: 'Find jobs' }, jobsMessage([golang, capco]), { id: 'u2', role: 'user', content: 'Which?' }]
+    const jobs = buildModelHistory(messages, applied, [], [golang.url])[1].content
+    expect(jobs).toMatch(/React Developer — Capco.*applied .*\(same role, likely the same opening on another site\)/)
+    expect(jobs).toMatch(/Golang Engineer — Beta.*not applied; owner says it's a different opening/)
+  })
+
+  it('tells the model which jobs were marked not a fit and which were skipped', () => {
+    const feedback = [createJobFeedback({ company: 'Beta', title: 'Golang Engineer', url: golang.url }, 'wrong-stack', 'no Rust')]
+    const message = { ...jobsMessage([golang, capco]), jobs: { ...jobsMessage([golang, capco]).jobs!, skipped: [{ title: 'Staff Engineer', company: 'Big', reason: 'above experience' }], applied: 2 } }
+    const history = buildModelHistory([{ id: 'u1', role: 'user', content: 'Find jobs' }, message, { id: 'u2', role: 'user', content: 'Why?' }], [], feedback)
+    expect(history[1].content).toMatch(/Golang Engineer — Beta.*marked not a fit: Wrong tech stack \("no Rust"\)/)
+    expect(history[1].content).toContain('- skipped: Staff Engineer — Big — above experience')
+    expect(history[1].content).toContain('Left out 2 listing(s) already marked applied.')
   })
 
   it('includes the applications tracker and cleans stopped answers', () => {
